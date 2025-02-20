@@ -3,3 +3,4 @@ Calculator/.python-version
 Calculator/__pycache__/*
 Calculator/.vscode/*
 Calculator/.venv/*
+.gitignore
