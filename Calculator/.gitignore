@@ -2,3 +2,4 @@ src/buttons/__pycache__/*
 src/core/__pycache__/*
 .python-version
 uv.lock
+.gitignore
