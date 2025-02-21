@@ -2,7 +2,7 @@ import flet as ft
 import Calculator as Calculator
 
 def main(page: ft.Page):
-    page.title = "Calc App"
+    page.title = "Calculator App"
 
     calc = Calculator.CalculatorApp()
 

@@ -1,62 +1,67 @@
 import flet as ft
-import ButtonEvents as be
+from buttons.DigitButton import DigitButton
+from buttons.ExtraActionButton import ExtraActionButton
+from buttons.ActionButton import ActionButton
 
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.reset()
 
+
+        self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
         self.width = 350
         self.bgcolor = ft.colors.BLACK
         self.border_radius = ft.border_radius.all(20)
         self.padding = 20
         self.content = ft.Column(
-            controls=[
+            controls=[                
+                ft.Row(controls=[self.expression], alignment="end"),
                 ft.Row(controls=[self.result], alignment="end"),
                 ft.Row(
                     controls=[
-                        be.ExtraActionButton(
+                        ExtraActionButton(
                             text="AC", button_clicked=self.button_clicked
                         ),
-                        be.ExtraActionButton(
+                        ExtraActionButton(
                             text="+/-", button_clicked=self.button_clicked
                         ),
-                        be.ExtraActionButton(text="%", button_clicked=self.button_clicked),
-                        be.ActionButton(text="/", button_clicked=self.button_clicked),
+                        ExtraActionButton(text="%", button_clicked=self.button_clicked),
+                        ActionButton(text="/", button_clicked=self.button_clicked),
                     ]
                 ),
                 ft.Row(
                     controls=[
-                        be.DigitButton(text="7", button_clicked=self.button_clicked),
-                        be.DigitButton(text="8", button_clicked=self.button_clicked),
-                        be.DigitButton(text="9", button_clicked=self.button_clicked),
-                        be.ActionButton(text="*", button_clicked=self.button_clicked),
+                        DigitButton(text="7", button_clicked=self.button_clicked),
+                        DigitButton(text="8", button_clicked=self.button_clicked),
+                        DigitButton(text="9", button_clicked=self.button_clicked),
+                        ActionButton(text="*", button_clicked=self.button_clicked),
                     ]
                 ),
                 ft.Row(
                     controls=[
-                        be.DigitButton(text="4", button_clicked=self.button_clicked),
-                        be.DigitButton(text="5", button_clicked=self.button_clicked),
-                        be.DigitButton(text="6", button_clicked=self.button_clicked),
-                        be.ActionButton(text="-", button_clicked=self.button_clicked),
+                        DigitButton(text="4", button_clicked=self.button_clicked),
+                        DigitButton(text="5", button_clicked=self.button_clicked),
+                        DigitButton(text="6", button_clicked=self.button_clicked),
+                        ActionButton(text="-", button_clicked=self.button_clicked),
                     ]
                 ),
                 ft.Row(
                     controls=[
-                        be.DigitButton(text="1", button_clicked=self.button_clicked),
-                        be.DigitButton(text="2", button_clicked=self.button_clicked),
-                        be.DigitButton(text="3", button_clicked=self.button_clicked),
-                        be.ActionButton(text="+", button_clicked=self.button_clicked),
+                        DigitButton(text="1", button_clicked=self.button_clicked),
+                        DigitButton(text="2", button_clicked=self.button_clicked),
+                        DigitButton(text="3", button_clicked=self.button_clicked),
+                        ActionButton(text="+", button_clicked=self.button_clicked),
                     ]
                 ),
                 ft.Row(
                     controls=[
-                        be.DigitButton(
+                        DigitButton(
                             text="0", expand=2, button_clicked=self.button_clicked
                         ),
-                        be.DigitButton(text=".", button_clicked=self.button_clicked),
-                        be.ActionButton(text="=", button_clicked=self.button_clicked),
+                        DigitButton(text=".", button_clicked=self.button_clicked),
+                        ActionButton(text="=", button_clicked=self.button_clicked),
                     ]
                 ),
             ]
