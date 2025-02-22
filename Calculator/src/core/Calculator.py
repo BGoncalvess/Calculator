@@ -9,13 +9,14 @@ class CalculatorApp(ft.Container):
         super().__init__()
         self.reset()
 
+        self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
         self.width = 350
         self.bgcolor = ft.colors.BLACK
         self.border_radius = ft.border_radius.all(20)
         self.padding = 20
         self.content = ft.Column(
-            controls=[                
+            controls=[
                 ft.Row(controls=[self.expression], alignment="end"),
                 ft.Row(controls=[self.result], alignment="end"),
                 ft.Row(
@@ -81,20 +82,14 @@ class CalculatorApp(ft.Container):
                 self.result.value = self.result.value + data
 
         elif data in ("+", "-", "*", "/"):
-            self.result.value = self.calculate(
-                self.operand1, float(self.result.value), self.operator
-            )
-            self.operator = data
+            self.result.value = self.result.value + data
+            self.expression.value = self.result.value
             if self.result.value == "Error":
                 self.operand1 = "0"
-            else:
-                self.operand1 = float(self.result.value)
-            self.new_operand = True
+            self.reset()
 
         elif data in ("="):
-            self.result.value = self.calculate(
-                self.operand1, float(self.result.value), self.operator
-            )
+            self.result.value = self.calculate(self.expression.value)
             self.reset()
 
         elif data in ("%"):
