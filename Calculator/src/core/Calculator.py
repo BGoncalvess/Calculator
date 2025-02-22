@@ -2,6 +2,7 @@ import flet as ft
 from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
 from buttons.ActionButton import ActionButton
+from exceptions.InvalidExpressionException import InvalidExpressionException
 
 class CalculatorApp(ft.Container):
     def __init__(self):
@@ -119,21 +120,14 @@ class CalculatorApp(ft.Container):
         else:
             return num
 
-    def calculate(self, operand1, operand2, operator):
-        if operator == "+":
-            result = self.format_number(operand1 + operand2)
-
-        elif operator == "-":
-            result = self.format_number(operand1 - operand2)
-
-        elif operator == "*":
-            result = self.format_number(operand1 * operand2)
-
-        elif operator == "/":
-            if operand2 == 0:
-                result = "Error"
-            else:
-                result = self.format_number(operand1 / operand2)
+    def calculate(self, expression):
+        try:
+            sympy_expression = sympy.sympify(expression).evalf()
+            result = sympy_expression
+        except Exception as e:
+            exception = InvalidExpressionException(f"Invalid expression: {expression}")
+            exception.error()
+            result = "Error"
 
         print(f"Calculation result: {result}")
         return result

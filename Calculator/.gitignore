@@ -1,5 +1,8 @@
 src/buttons/__pycache__/*
 src/core/__pycache__/*
+src/logger/__pycache__/
+src/exceptions/__pycache__/
 .python-version
 uv.lock
 .gitignore
+logs/*
