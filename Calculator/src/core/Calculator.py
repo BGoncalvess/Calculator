@@ -9,8 +9,6 @@ class CalculatorApp(ft.Container):
         super().__init__()
         self.reset()
 
-
-        self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
         self.width = 350
         self.bgcolor = ft.colors.BLACK
