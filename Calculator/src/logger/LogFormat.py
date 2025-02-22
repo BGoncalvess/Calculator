@@ -3,19 +3,17 @@ import coloredlogs
 
 class LogFormat:
 
-    def __init__(self):
-        self.logger = self.setup_logger()
+    def __init__(self, name):
+        self.logger = self.setup_logger(name)
     
-    def setup_logger(self):
-        logger = logging.getLogger(__name__)
+    def setup_logger(self,name):
+        logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
         
-        # File handler
-        file_handler = logging.FileHandler("logs/error.log")
+        file_handler = logging.FileHandler("Calculator/logs/error.log")
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(file_formatter)
         
-        # Add handlers to logger
         logger.addHandler(file_handler)
         
         custom_level_styles = {

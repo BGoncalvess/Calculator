@@ -4,10 +4,12 @@ from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
 from buttons.ActionButton import ActionButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
+from logger.LogFormat import LogFormat
 
 class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
+        self.logger = LogFormat(__name__).logger
         self.reset()
 
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
@@ -81,11 +83,11 @@ class CalculatorApp(ft.Container):
                 self.result.value = data
                 self.new_operand = False
             else:
-                self.result.value = self.result.value + data
+                self.result.value = str(self.result.value) + data
                 self.expression.value = self.result.value
 
         elif data in ("+", "-", "*", "/"):
-            self.result.value = self.result.value + data
+            self.result.value = str(self.result.value) + data
             self.expression.value = self.result.value
             if self.result.value == "Error":
                 self.operand1 = "0"
@@ -119,13 +121,20 @@ class CalculatorApp(ft.Container):
     def calculate(self, expression):
         try:
             sympy_expression = sympy.sympify(expression).evalf()
-            result = sympy_expression
-        except Exception as e:
-            exception = InvalidExpressionException(f"Invalid expression: {expression}")
-            exception.error()
+            result = round(float(sympy_expression), 2)
+        except sympy.SympifyError as e:
+            e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
+            e.error()
             result = "Error"
+            self.expression.value = "Error"
 
-        print(f"Calculation result: {result}")
+        except ZeroDivisionError as e:
+            e = InvalidExpressionException("Division by zero", self.logger)
+            e.error()
+            result = "Error"
+            self.expression.value = "Error"
+
+        self.logger.info(str(result))
         return result
 
     def reset(self):
