@@ -7,5 +7,4 @@ class InvalidExpressionException(Exception):
         self.logger = logger
 
     def error(self):
-        # Create a LogFormat instance and log the exception
         self.logger.error(self.message)
