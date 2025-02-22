@@ -1,4 +1,5 @@
 import flet as ft
+import sympy as sympy
 from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
 from buttons.ActionButton import ActionButton
@@ -72,14 +73,16 @@ class CalculatorApp(ft.Container):
         print(f"Button clicked with data = {data}")
         if self.result.value == "Error" or data == "AC":
             self.result.value = "0"
+            self.expression.value = ""
             self.reset()
 
         elif data in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."):
-            if self.result.value == "0" or self.new_operand == True:
+            if self.result.value == "0":
                 self.result.value = data
                 self.new_operand = False
             else:
                 self.result.value = self.result.value + data
+                self.expression.value = self.result.value
 
         elif data in ("+", "-", "*", "/"):
             self.result.value = self.result.value + data
