@@ -10,7 +10,6 @@ class CalculatorApp(ft.Container):
     def __init__(self):
         super().__init__()
         self.logger = LogFormat(__name__).logger
-        self.reset()
 
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
@@ -76,7 +75,7 @@ class CalculatorApp(ft.Container):
         if self.result.value == "Error" or data == "AC":
             self.result.value = "0"
             self.expression.value = ""
-            self.reset()
+
 
         elif data in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."):
             if self.result.value == "0":
@@ -87,19 +86,18 @@ class CalculatorApp(ft.Container):
             self.expression.value = self.result.value
 
         elif data in ("+", "-", "*", "/"):
+            # Invert what format did to the of the number
             if self.result.value != "Error":
+                self.result.value = self.result.value.replace(" ", "")
                 self.result.value = str(self.result.value) + data
-                self.expression.value = self.result.value
-            self.reset()
+            self.expression.value = self.result.value
 
         elif data in ("="):
             self.result.value = self.calculate(self.expression.value)
-            self.reset()
 
         elif data in ("%"):
             self.result.value = str(float(self.result.value) / 100)
             self.expression.value = self.result.value
-            self.reset()
 
         elif data in ("+/-"):
             if float(self.result.value) > 0:
@@ -120,7 +118,7 @@ class CalculatorApp(ft.Container):
     def calculate(self, expression):
         try:
             sympy_expression = sympy.sympify(expression).evalf()
-            result = round(float(sympy_expression), 2)
+            result = "{:,.2f}".format(float(sympy_expression)).replace(",", " ")
         except sympy.SympifyError as e:
             e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
             e.error()
@@ -135,8 +133,3 @@ class CalculatorApp(ft.Container):
 
         self.logger.info(str(result))
         return result
-
-    def reset(self):
-        self.operator = "+"
-        self.operand1 = 0
-        self.new_operand = True
