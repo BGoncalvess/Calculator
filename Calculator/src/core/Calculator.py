@@ -72,7 +72,7 @@ class CalculatorApp(ft.Container):
 
     def button_clicked(self, e):
         data = e.control.data
-        print(f"Button clicked with data = {data}")
+        self.logger.info(f"Button clicked with data: {data}")
         if self.result.value == "Error" or data == "AC":
             self.result.value = "0"
             self.expression.value = ""
@@ -84,13 +84,12 @@ class CalculatorApp(ft.Container):
                 self.new_operand = False
             else:
                 self.result.value = str(self.result.value) + data
-                self.expression.value = self.result.value
+            self.expression.value = self.result.value
 
         elif data in ("+", "-", "*", "/"):
-            self.result.value = str(self.result.value) + data
-            self.expression.value = self.result.value
-            if self.result.value == "Error":
-                self.operand1 = "0"
+            if self.result.value != "Error":
+                self.result.value = str(self.result.value) + data
+                self.expression.value = self.result.value
             self.reset()
 
         elif data in ("="):
@@ -98,7 +97,8 @@ class CalculatorApp(ft.Container):
             self.reset()
 
         elif data in ("%"):
-            self.result.value = float(self.result.value) / 100
+            self.result.value = str(float(self.result.value) / 100)
+            self.expression.value = self.result.value
             self.reset()
 
         elif data in ("+/-"):
@@ -106,9 +106,8 @@ class CalculatorApp(ft.Container):
                 self.result.value = "-" + str(self.result.value)
 
             elif float(self.result.value) < 0:
-                self.result.value = str(
-                    self.format_number(abs(float(self.result.value)))
-                )
+                self.result.value = str(self.format_number(abs(float(self.result.value))))
+            self.expression.value = self.result.value
 
         self.update()
 
