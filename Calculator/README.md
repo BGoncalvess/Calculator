@@ -24,3 +24,6 @@ This is a simple calculator that can perform basic arithmetic operations. It is 
 ```bash
 uv flet run
 ```
+
+Error's to be fixed:
+![image](error1.png)
