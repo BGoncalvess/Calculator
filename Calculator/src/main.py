@@ -1,11 +1,11 @@
 import flet as ft
-from core import Calculator
+from core.Calculator import Calculator
 
 def main(page: ft.Page):
     
     page.title = "Calculator App"
 
-    calc = Calculator.CalculatorApp()
+    calc = Calculator(page=page)
 
     page.add(calc)
 

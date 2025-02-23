@@ -3,14 +3,17 @@ import sympy as sympy
 from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
 from buttons.ActionButton import ActionButton
+from buttons.HistoryButton import HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
 from logger.LogFormat import LogFormat
+from core.History import History
 
-class CalculatorApp(ft.Container):
-    def __init__(self):
+class Calculator(ft.Container):
+    def __init__(self, page):
         super().__init__()
+        self.page = page
+        self.history_data = []
         self.logger = LogFormat(__name__).logger
-
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
         self.width = 350
@@ -19,6 +22,13 @@ class CalculatorApp(ft.Container):
         self.padding = 20
         self.content = ft.Column(
             controls=[
+                ft.Row(
+                    controls=[
+                        HistoryButton(
+                            on_click=self.show_history
+                        )
+                    ]
+                ),
                 ft.Row(controls=[self.expression], alignment="end"),
                 ft.Row(controls=[self.result], alignment="end"),
                 ft.Row(
@@ -104,7 +114,6 @@ class CalculatorApp(ft.Container):
             self.result.value = "0"
             self.expression.value = ""
 
-
         elif data in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."):
             if self.result.value == "0":
                 self.result.value = data
@@ -138,6 +147,7 @@ class CalculatorApp(ft.Container):
 
         elif data in ("="):
             self.result.value = self.calculate(self.expression.value)
+            self.history_data.append(self.expression.value + " = " + self.result.value)
 
         elif data in ("%"):
             self.result.value = self.result.value.replace(" ", "")
@@ -154,8 +164,8 @@ class CalculatorApp(ft.Container):
             elif float(self.result.value) < 0:
                 self.result.value = str(self.format_number(abs(float(self.result.value))))
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
-            self.expression.value = self.result.value
-
+            self.expression.value = self.result.value        
+            
         self.update()
 
     def format_number(self, num):
@@ -182,3 +192,8 @@ class CalculatorApp(ft.Container):
 
         self.logger.info(str(result))
         return result
+    
+    def show_history(self, e):
+        history_view = History(self.history_data, self.page)
+        self.page.views.append(history_view)
+        self.page.update()
