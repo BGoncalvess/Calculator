@@ -9,5 +9,4 @@ def main(page: ft.Page):
 
     page.add(calc)
 
-
 ft.app(target=main)

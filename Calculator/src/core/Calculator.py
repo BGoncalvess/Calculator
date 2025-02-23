@@ -23,6 +23,34 @@ class CalculatorApp(ft.Container):
                 ft.Row(controls=[self.result], alignment="end"),
                 ft.Row(
                     controls=[
+                        ActionButton(
+                            text="v-", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="sen", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="cos", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(
+                            text="tan", button_clicked=self.button_clicked
+                        ),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        ExtraActionButton(
+                            text="CE", button_clicked=self.button_clicked
+                        ),
+                        ExtraActionButton(
+                            text="<-", button_clicked=self.button_clicked
+                        ),
+                        ActionButton(text="(", button_clicked=self.button_clicked),
+                        ActionButton(text=")", button_clicked=self.button_clicked)
+                    ]
+                ),
+                ft.Row(
+                    controls=[
                         ExtraActionButton(
                             text="AC", button_clicked=self.button_clicked
                         ),
@@ -85,12 +113,26 @@ class CalculatorApp(ft.Container):
                 self.result.value = str(self.result.value) + data
             self.expression.value = self.result.value
 
-        elif data in ("+", "-", "*", "/"):
-            # Invert what format did to the of the number
+        elif data in ("+", "-", "*", "/","(",")","sen","cos","tan","v-"):
             if self.result.value != "Error":
                 self.result.value = self.result.value.replace(" ", "")
-                self.result.value = str(self.result.value) + data
+                if data == "v-" or data == "sen" or data == "cos" or data == "tan":
+                    self.result.value = ""
+                    if data == "sen": data = "sin("
+                    elif data == "cos": data = "cos("
+                    elif data == "tan": data = "tan("
+                    elif data == "v-":  data = "sqrt("
+                    self.result.value = str(self.result.value) + data
+                else:
+                    self.result.value = str(self.result.value) + data
+                self.logger.info(f"Expression: {data}")
             self.expression.value = self.result.value
+
+        elif data in ("CE"):
+            self.result.value = "0"
+        
+        elif data in ("<-"):
+            self.result.value = self.result.value[:-1]
 
         elif data in ("="):
             self.result.value = self.calculate(self.expression.value)
