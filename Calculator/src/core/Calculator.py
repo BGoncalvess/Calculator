@@ -130,23 +130,30 @@ class CalculatorApp(ft.Container):
 
         elif data in ("CE"):
             self.result.value = "0"
+            self.expression.value = self.result.value
         
         elif data in ("<-"):
             self.result.value = self.result.value[:-1]
+            self.expression.value = self.result.value
 
         elif data in ("="):
             self.result.value = self.calculate(self.expression.value)
 
         elif data in ("%"):
+            self.result.value = self.result.value.replace(" ", "")
             self.result.value = str(float(self.result.value) / 100)
+            self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
             self.expression.value = self.result.value
 
         elif data in ("+/-"):
+            self.result.value = self.result.value.replace(" ", "")
             if float(self.result.value) > 0:
                 self.result.value = "-" + str(self.result.value)
+                self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
 
             elif float(self.result.value) < 0:
                 self.result.value = str(self.format_number(abs(float(self.result.value))))
+                self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
             self.expression.value = self.result.value
 
         self.update()
