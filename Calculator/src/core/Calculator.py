@@ -1,12 +1,9 @@
 import flet as ft
 import sympy as sympy
-from buttons.DigitButton import DigitButton
-from buttons.ExtraActionButton import ExtraActionButton
-from buttons.ActionButton import ActionButton
-from buttons.HistoryButton import HistoryButton
+from buttons import DigitButton, ExtraActionButton, ActionButton, HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
 from logger.LogFormat import LogFormat
-from core.History import History
+from buttons import HistoryButton
 
 class Calculator(ft.Container):
     def __init__(self, page):
@@ -24,9 +21,7 @@ class Calculator(ft.Container):
             controls=[
                 ft.Row(
                     controls=[
-                        HistoryButton(
-                            on_click=self.show_history
-                        )
+                        HistoryButton().on_click(self.page),
                     ]
                 ),
                 ft.Row(controls=[self.expression], alignment="end"),
@@ -139,7 +134,6 @@ class Calculator(ft.Container):
 
         elif data in ("CE"):
             self.result.value = "0"
-            self.expression.value = self.result.value
         
         elif data in ("<-"):
             self.result.value = self.result.value[:-1]
@@ -181,19 +175,12 @@ class Calculator(ft.Container):
         except sympy.SympifyError as e:
             e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
             e.error()
-            result = "Error"
-            self.expression.value = "Error"
+            result = "Syntax Error"
 
         except ZeroDivisionError as e:
             e = InvalidExpressionException("Division by zero", self.logger)
             e.error()
-            result = "Error"
-            self.expression.value = "Error"
+            result = "Cant divide by zero"
 
         self.logger.info(str(result))
         return result
-    
-    def show_history(self, e):
-        history_view = History(self.history_data, self.page)
-        self.page.views.append(history_view)
-        self.page.update()

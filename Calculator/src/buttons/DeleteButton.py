@@ -1,5 +1,6 @@
 import flet as ft
+from buttons import Button
 
-class DeleteButton(ft.Container):
+class DeleteButton(Button):
     def __init__(self):
         super().__init__()

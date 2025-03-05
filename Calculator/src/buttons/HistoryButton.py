@@ -1,5 +1,14 @@
 import flet as ft
+from buttons.Icon import Icon
+from core import RouteManager
+from logger.LogFormat import LogFormat
 
-class HistoryButton(ft.IconButton):
-    def __init__(self, on_click=None):
-        super().__init__(icon = ft.icons.HISTORY, on_click=on_click)
+class HistoryButton(Icon):
+    def __init__(self):
+        super().__init__(name=ft.icons.HISTORY, on_click=self.on_click)
+        self.logger = LogFormat(__name__).logger
+
+    def on_click(self, e):
+        self.logger.info("History button clicked")
+        RouteManager.route_change("/history")
+        self.logger.info("Route changed to History")
