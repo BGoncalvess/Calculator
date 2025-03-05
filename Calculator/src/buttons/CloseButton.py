@@ -2,9 +2,9 @@ import flet as ft
 from buttons import Button
 
 
-class CloseButton(Button):
+class CloseButton(ft.Button):
     def __init__(self, page):
-        super().__init__(text="Close")
+        super().__init__(icon="")
         self.page = page
         self.on_click = self.close
 

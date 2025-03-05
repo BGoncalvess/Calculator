@@ -159,7 +159,7 @@ class Calculator(ft.Container):
                 self.result.value = str(self.format_number(abs(float(self.result.value))))
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
             self.expression.value = self.result.value        
-            
+
         self.update()
 
     def format_number(self, num):

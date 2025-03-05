@@ -1,12 +1,14 @@
 import flet as ft
-from core.Calculator import Calculator
+from core import RouteManager
 
 def main(page: ft.Page):
     
     page.title = "Calculator App"
+    
+    route_manager : RouteManager = RouteManager(page)
 
-    calc = Calculator(page=page)
-
-    page.add(calc)
+    page.window.width=500
+    
+    page.add(route_manager)
 
 ft.app(target=main)
