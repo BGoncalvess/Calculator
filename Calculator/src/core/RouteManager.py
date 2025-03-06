@@ -1,28 +1,45 @@
 import flet as ft
-from core import Calculator, History
+from views.CalculatorView import CalculatorView
+from views.HistoryView import HistoryView
 from logger.LogFormat import LogFormat
 
-class RouteManager(ft.RouteChangeEvent):
-    def __init__(self, page):
+class RouteManager():
+    instance = None
+
+    def __init__(self, page:ft.Page):
         super().__init__()
-
-        self.dict_views = {
-            "Calculator": Calculator(),
-            "History" : History()
-        }
-
         self.logger = LogFormat(__name__).logger
         self.page = page
-        self.route = self.page.route
-        self.route.add_route_change_listener(self.on_route_change)
-
-    def route_change(self, e):
-        self.page.view.clear()
+        self.dict_views = {
+            "Calculator": CalculatorView(),
+            "History" : HistoryView()
+        }
+        self.page.on_route_change = self.route_change
+        self.page.go("/")
+        self.page.update()
+        
+    def route_change(self, e:ft.RouteChangeEvent):
+        self.logger.info(f"Route changed to {e.route}") 
+        self.page.views.clear()
         match e.route:
             case "/":
-                self.page.views.append()
-            case "/history":
-                self.page.views.append(self.dict_views["History"])
-            case "/calculator":
                 self.page.views.append(self.dict_views["Calculator"])
+            case "/history":
+                self.page.views.append(self.dict_views["Calculator"])
+                self.page.views.append(self.dict_views["History"])
         self.page.update()
+
+    def view_pop(self):
+        self.page.views.pop()
+        self.page.update()
+
+    @classmethod
+    def initialize_route_manager(cls, page:ft.Page) -> 'RouteManager':
+        cls.instance = cls(page)
+        return cls.instance
+
+    @classmethod
+    def get(cls) -> 'RouteManager':
+        if cls.instance is None:
+            raise Exception("RouteManager not initialized")
+        return cls.instance

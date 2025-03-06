@@ -5,10 +5,9 @@ def main(page: ft.Page):
     
     page.title = "Calculator App"
     
-    route_manager : RouteManager = RouteManager(page)
+    RouteManager.initialize_route_manager(page)
 
-    page.window.width=500
+    page.window.width=400
+    page.window.height=500
     
-    page.add(route_manager)
-
 ft.app(target=main)

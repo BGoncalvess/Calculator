@@ -1,14 +1,15 @@
 import flet as ft
 import sympy as sympy
-from buttons import DigitButton, ExtraActionButton, ActionButton, HistoryButton
+from buttons.ActionButton import ActionButton
+from buttons.DigitButton import DigitButton
+from buttons.ExtraActionButton import ExtraActionButton
+from buttons.HistoryButton import HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
 from logger.LogFormat import LogFormat
-from buttons import HistoryButton
 
 class Calculator(ft.Container):
-    def __init__(self, page):
+    def __init__(self):
         super().__init__()
-        self.page = page
         self.history_data = []
         self.logger = LogFormat(__name__).logger
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
@@ -21,7 +22,7 @@ class Calculator(ft.Container):
             controls=[
                 ft.Row(
                     controls=[
-                        HistoryButton().on_click(self.page),
+                        HistoryButton(),
                     ]
                 ),
                 ft.Row(controls=[self.expression], alignment="end"),
@@ -102,6 +103,10 @@ class Calculator(ft.Container):
             ]
         )
 
+    def update_history_data(self, data):
+        self.history_data.append(data)
+
+
     def button_clicked(self, e):
         data = e.control.data
         self.logger.info(f"Button clicked with data: {data}")
@@ -162,6 +167,9 @@ class Calculator(ft.Container):
 
         self.update()
 
+
+    def set_value:
+
     def format_number(self, num):
         if num % 1 == 0:
             return int(num)
@@ -172,6 +180,7 @@ class Calculator(ft.Container):
         try:
             sympy_expression = sympy.sympify(expression).evalf()
             result = "{:,.2f}".format(float(sympy_expression)).replace(",", " ")
+
         except sympy.SympifyError as e:
             e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
             e.error()

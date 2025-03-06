@@ -1,14 +1,15 @@
 import flet as ft
-from buttons import Button
+from buttons.IconButton import IconButton
+from logger.LogFormat import LogFormat
 
 
-class CloseButton(ft.Button):
-    def __init__(self, page):
-        super().__init__(icon="")
-        self.page = page
-        self.on_click = self.close
+class CloseButton(IconButton):
+    def __init__(self):
+        super().__init__(name=ft.icons.CLOSE, on_click=self.__on_click_handler)
+        self.logger = LogFormat(__name__).logger
 
-    def close(self, e):
-        if self.page.views:
-            self.page.views.pop()
-            self.page.update() 
+    def __on_click_handler(self, e):
+        self.logger.info("Close button clicked")
+        from core.RouteManager import RouteManager
+        RouteManager.get().view_pop()
+
