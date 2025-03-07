@@ -120,9 +120,9 @@ class Calculator(ft.Container):
                 self.new_operand = False
             else:
                 self.result.value = str(self.result.value) + data
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
-        elif data in ("+", "-", "*", "/","(",")","sen","cos","tan","v-"):
+        elif data in ("+", "-", "*", "/","sen","cos","tan","v-"):
             if self.result.value != "Error":
                 self.result.value = self.result.value.replace(" ", "")
                 if data == "v-" or data == "sen" or data == "cos" or data == "tan":
@@ -131,28 +131,38 @@ class Calculator(ft.Container):
                     elif data == "cos": data = "cos("
                     elif data == "tan": data = "tan("
                     elif data == "v-":  data = "sqrt("
+                    self.check_correct_format(self.result.value)
                     self.result.value = str(self.result.value) + data
                 else:
+                    self.check_correct_format(self.result.value)
                     self.result.value = str(self.result.value) + data
                 self.logger.info(f"Expression: {data}")
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
+        
+        elif data in ("(",")"):
+            if self.result.value != "Error":
+                self.result.value = self.result.value.replace(" ", "")
+                self.result.value = str(self.result.value) + data
+                self.set_value(self.result.value)
 
         elif data in ("CE"):
             self.result.value = "0"
-        
+
         elif data in ("<-"):
             self.result.value = self.result.value[:-1]
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
         elif data in ("="):
-            self.result.value = self.calculate(self.expression.value)
-            self.history_data.append(self.expression.value + " = " + self.result.value)
-
+            new_expression = self.close_parenthesis(self.result.value)
+            self.check_exist_operator_before_parenthesis(new_expression)
+            self.result.value = self.calculate(new_expression)
+            self.set_value(self.result.value, new_expression)
+            
         elif data in ("%"):
             self.result.value = self.result.value.replace(" ", "")
             self.result.value = str(float(self.result.value) / 100)
             self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
         elif data in ("+/-"):
             self.result.value = self.result.value.replace(" ", "")
@@ -163,18 +173,38 @@ class Calculator(ft.Container):
             elif float(self.result.value) < 0:
                 self.result.value = str(self.format_number(abs(float(self.result.value))))
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
-            self.expression.value = self.result.value        
+            self.set_value(self.result.value)
 
         self.update()
 
+    def check_exist_operator_before_parenthesis(self, value):
+        for i in range(len(value)):
+            if value[i] == "(" and value[i-1] != ("+", "-", "*", "/"):
+                value = value[:i] + "*" + value[i:]
+        return value
 
-    def set_value:
+    def close_parenthesis(self, value):
+        open_parentheses = value.count("(")
+        close_parentheses = value.count(")")
+        while open_parentheses > close_parentheses:
+            value += ")"
+            close_parentheses += 1
+        return value
+
+    def check_correct_format(self, value):
+        if value[-1] in ("+", "-", "*", "/"):
+            self.result.value = value[:-1]
+
+    def set_value(self, value, expression=None):
+        if expression:
+            self.expression.value = expression
+        self.result.value = value
+        self.update()
 
     def format_number(self, num):
         if num % 1 == 0:
             return int(num)
-        else:
-            return num
+        return num
 
     def calculate(self, expression):
         try:
