@@ -18,7 +18,7 @@ class RouteManager():
         self.page.go("/")
         self.page.update()
         
-    def route_change(self, e:ft.RouteChangeEvent):
+    async def route_change(self, e:ft.RouteChangeEvent):
         self.logger.info(f"Route changed to {e.route}") 
         self.page.views.clear()
         match e.route:
@@ -35,7 +35,8 @@ class RouteManager():
 
     @classmethod
     def initialize_route_manager(cls, page:ft.Page) -> 'RouteManager':
-        cls.instance = cls(page)
+        if cls.instance is None:
+            cls.instance = cls(page)
         return cls.instance
 
     @classmethod

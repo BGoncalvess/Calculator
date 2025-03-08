@@ -142,6 +142,8 @@ class Calculator(ft.Container):
         elif data in ("(",")"):
             if self.result.value != "Error":
                 self.result.value = self.result.value.replace(" ", "")
+                if data == "(" and self.result.value[-1].isdigit():
+                    self.result.value += "*"
                 self.result.value = str(self.result.value) + data
                 self.set_value(self.result.value)
 
@@ -154,7 +156,6 @@ class Calculator(ft.Container):
 
         elif data in ("="):
             new_expression = self.close_parenthesis(self.result.value)
-            self.check_exist_operator_before_parenthesis(new_expression)
             self.result.value = self.calculate(new_expression)
             self.set_value(self.result.value, new_expression)
             
@@ -177,11 +178,6 @@ class Calculator(ft.Container):
 
         self.update()
 
-    def check_exist_operator_before_parenthesis(self, value):
-        for i in range(len(value)):
-            if value[i] == "(" and value[i-1] != ("+", "-", "*", "/"):
-                value = value[:i] + "*" + value[i:]
-        return value
 
     def close_parenthesis(self, value):
         open_parentheses = value.count("(")
