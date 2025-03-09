@@ -1,7 +1,7 @@
 import flet as ft
 from views.CalculatorView import CalculatorView
 from views.HistoryView import HistoryView
-from logger.LogFormat import LogFormat
+from formats.LogFormat import LogFormat
 
 class RouteManager():
     instance = None
@@ -18,7 +18,7 @@ class RouteManager():
         self.page.go("/")
         self.page.update()
         
-    async def route_change(self, e:ft.RouteChangeEvent):
+    def route_change(self, e:ft.RouteChangeEvent):
         self.logger.info(f"Route changed to {e.route}") 
         self.page.views.clear()
         match e.route:

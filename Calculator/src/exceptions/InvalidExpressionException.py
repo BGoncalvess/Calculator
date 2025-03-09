@@ -1,4 +1,4 @@
-from logger.LogFormat import LogFormat
+from formats.LogFormat import LogFormat
 
 class InvalidExpressionException(Exception):
     def __init__(self, message, logger):

@@ -1,6 +1,6 @@
 import flet as ft
 from buttons.IconButton import IconButton
-from logger.LogFormat import LogFormat
+from formats.LogFormat import LogFormat
 
 class DownloadButton(IconButton):
     def __init__(self):

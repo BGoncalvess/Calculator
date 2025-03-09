@@ -5,12 +5,12 @@ from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
 from buttons.HistoryButton import HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
-from logger.LogFormat import LogFormat
+from formats.LogFormat import LogFormat
+from storage.HistoryStorage import HistoryStorage
 
 class Calculator(ft.Container):
     def __init__(self):
         super().__init__()
-        self.history_data = []
         self.logger = LogFormat(__name__).logger
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
@@ -18,11 +18,12 @@ class Calculator(ft.Container):
         self.bgcolor = ft.colors.BLACK
         self.border_radius = ft.border_radius.all(20)
         self.padding = 20
+        self.history = HistoryButton()
         self.content = ft.Column(
             controls=[
                 ft.Row(
                     controls=[
-                        HistoryButton(),
+                        self.history
                     ]
                 ),
                 ft.Row(controls=[self.expression], alignment="end"),
@@ -103,10 +104,6 @@ class Calculator(ft.Container):
             ]
         )
 
-    def update_history_data(self, data):
-        self.history_data.append(data)
-
-
     def button_clicked(self, e):
         data = e.control.data
         self.logger.info(f"Button clicked with data: {data}")
@@ -119,7 +116,7 @@ class Calculator(ft.Container):
                 self.result.value = data
                 self.new_operand = False
             else:
-                self.result.value = str(self.result.value) + data
+                self.result.value = self.result.value + data
             self.set_value(self.result.value)
 
         elif data in ("+", "-", "*", "/","sen","cos","tan","v-"):
@@ -131,11 +128,9 @@ class Calculator(ft.Container):
                     elif data == "cos": data = "cos("
                     elif data == "tan": data = "tan("
                     elif data == "v-":  data = "sqrt("
-                    self.check_correct_format(self.result.value)
-                    self.result.value = str(self.result.value) + data
+                    self.result.value = self.result.value + data
                 else:
-                    self.check_correct_format(self.result.value)
-                    self.result.value = str(self.result.value) + data
+                    self.result.value = self.result.value + data
                 self.logger.info(f"Expression: {data}")
             self.set_value(self.result.value)
         
@@ -144,7 +139,7 @@ class Calculator(ft.Container):
                 self.result.value = self.result.value.replace(" ", "")
                 if data == "(" and self.result.value[-1].isdigit():
                     self.result.value += "*"
-                self.result.value = str(self.result.value) + data
+                self.result.value = self.result.value + data
                 self.set_value(self.result.value)
 
         elif data in ("CE"):
@@ -158,7 +153,9 @@ class Calculator(ft.Container):
             new_expression = self.close_parenthesis(self.result.value)
             self.result.value = self.calculate(new_expression)
             self.set_value(self.result.value, new_expression)
-            
+            storage = HistoryStorage()
+            storage.add_entry(self.expression.value, self.result.value)
+
         elif data in ("%"):
             self.result.value = self.result.value.replace(" ", "")
             self.result.value = str(float(self.result.value) / 100)
@@ -168,7 +165,7 @@ class Calculator(ft.Container):
         elif data in ("+/-"):
             self.result.value = self.result.value.replace(" ", "")
             if float(self.result.value) > 0:
-                self.result.value = "-" + str(self.result.value)
+                self.result.value = "-" + self.result.value
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
 
             elif float(self.result.value) < 0:
