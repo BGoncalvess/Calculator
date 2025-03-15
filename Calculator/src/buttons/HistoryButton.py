@@ -9,5 +9,4 @@ class HistoryButton(IconButton):
 
     def __on_click_handler(self, e):
         self.logger.info("History button clicked")
-        from core.RouteManager import RouteManager
-        RouteManager.get().route_change(ft.RouteChangeEvent("/history"))
+        self.page.go("/history")

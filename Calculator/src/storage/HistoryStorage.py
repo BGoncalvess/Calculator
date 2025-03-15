@@ -1,17 +1,16 @@
-from collections import deque
 from formats.HistoryFormat import HistoryFormat
 
 class HistoryStorage:
-    def __init__(self, max_size=10):
-        self.history = deque(maxlen=max_size)
-        self.counter = 1
 
-    def add_entry(self, expression, result):
-        entry = HistoryFormat(self.counter, expression, result)
-        self.history.append(entry)
-        self.counter += 1
+    history = []
+    counter = 0
 
-    def get_history(self):
-        if self.history:
-            return list(self.history)
-        return None
+    @classmethod
+    def add_history(cls, expression, result):
+        history_expression_formatted = HistoryFormat(cls.counter, expression, result)
+        cls.history.append(history_expression_formatted)
+        cls.counter += 1
+
+    @classmethod
+    def get_history(cls):
+        return cls.history if cls.history else None

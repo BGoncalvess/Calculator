@@ -14,11 +14,12 @@ class RouteManager():
             "Calculator": CalculatorView(),
             "History" : HistoryView()
         }
+
         self.page.on_route_change = self.route_change
         self.page.go("/")
         self.page.update()
         
-    def route_change(self, e:ft.RouteChangeEvent):
+    async def route_change(self, e:ft.RouteChangeEvent):
         self.logger.info(f"Route changed to {e.route}") 
         self.page.views.clear()
         match e.route:
@@ -27,10 +28,11 @@ class RouteManager():
             case "/history":
                 self.page.views.append(self.dict_views["Calculator"])
                 self.page.views.append(self.dict_views["History"])
+
         self.page.update()
 
     def view_pop(self):
-        self.page.views.pop()
+        self.page.route = self.page.views[-2].route
         self.page.update()
 
     @classmethod

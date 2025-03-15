@@ -7,6 +7,7 @@ from buttons.HistoryButton import HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
 from formats.LogFormat import LogFormat
 from storage.HistoryStorage import HistoryStorage
+from views.HistoryView import HistoryView
 
 class Calculator(ft.Container):
     def __init__(self):
@@ -18,12 +19,13 @@ class Calculator(ft.Container):
         self.bgcolor = ft.colors.BLACK
         self.border_radius = ft.border_radius.all(20)
         self.padding = 20
-        self.history = HistoryButton()
+        self.history_view = HistoryView()
+        self.storage = HistoryStorage
         self.content = ft.Column(
             controls=[
                 ft.Row(
                     controls=[
-                        self.history
+                        HistoryButton()
                     ]
                 ),
                 ft.Row(controls=[self.expression], alignment="end"),
@@ -153,8 +155,7 @@ class Calculator(ft.Container):
             new_expression = self.close_parenthesis(self.result.value)
             self.result.value = self.calculate(new_expression)
             self.set_value(self.result.value, new_expression)
-            storage = HistoryStorage()
-            storage.add_entry(self.expression.value, self.result.value)
+            HistoryStorage.add_history(self.expression.value, self.result.value)
 
         elif data in ("%"):
             self.result.value = self.result.value.replace(" ", "")
