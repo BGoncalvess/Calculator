@@ -1,5 +1,5 @@
 import flet as ft
-from buttons.Button import Button
+from buttons import Button 
 
 class ActionButton(Button):
     def __init__(self, text, button_clicked):

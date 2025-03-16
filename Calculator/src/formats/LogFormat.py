@@ -26,7 +26,7 @@ class LogFormat:
         coloredlogs.install(level='INFO', logger=logger, fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level_styles=custom_level_styles)
 
         return logger
-    
+
     def info(self, message):
         self.logger.info(message)
     

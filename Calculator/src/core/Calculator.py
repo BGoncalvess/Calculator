@@ -1,24 +1,33 @@
 import flet as ft
 import sympy as sympy
+from buttons.ActionButton import ActionButton
 from buttons.DigitButton import DigitButton
 from buttons.ExtraActionButton import ExtraActionButton
-from buttons.ActionButton import ActionButton
+from buttons.HistoryButton import HistoryButton
 from exceptions.InvalidExpressionException import InvalidExpressionException
-from logger.LogFormat import LogFormat
+from formats.LogFormat import LogFormat
+from storage.HistoryStorage import HistoryStorage
+from views.HistoryView import HistoryView
 
-class CalculatorApp(ft.Container):
+class Calculator(ft.Container):
     def __init__(self):
         super().__init__()
         self.logger = LogFormat(__name__).logger
-
         self.expression = ft.Text(value="", color=ft.colors.WHITE, size=16)
         self.result = ft.Text(value="0", color=ft.colors.WHITE, size=20)
         self.width = 350
         self.bgcolor = ft.colors.BLACK
         self.border_radius = ft.border_radius.all(20)
         self.padding = 20
+        self.history_view = HistoryView()
+        self.storage = HistoryStorage
         self.content = ft.Column(
             controls=[
+                ft.Row(
+                    controls=[
+                        HistoryButton()
+                    ]
+                ),
                 ft.Row(controls=[self.expression], alignment="end"),
                 ft.Row(controls=[self.result], alignment="end"),
                 ft.Row(
@@ -104,16 +113,15 @@ class CalculatorApp(ft.Container):
             self.result.value = "0"
             self.expression.value = ""
 
-
         elif data in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."):
             if self.result.value == "0":
                 self.result.value = data
                 self.new_operand = False
             else:
-                self.result.value = str(self.result.value) + data
-            self.expression.value = self.result.value
+                self.result.value = self.result.value + data
+            self.set_value(self.result.value)
 
-        elif data in ("+", "-", "*", "/","(",")","sen","cos","tan","v-"):
+        elif data in ("+", "-", "*", "/","sen","cos","tan","v-"):
             if self.result.value != "Error":
                 self.result.value = self.result.value.replace(" ", "")
                 if data == "v-" or data == "sen" or data == "cos" or data == "tan":
@@ -122,63 +130,90 @@ class CalculatorApp(ft.Container):
                     elif data == "cos": data = "cos("
                     elif data == "tan": data = "tan("
                     elif data == "v-":  data = "sqrt("
-                    self.result.value = str(self.result.value) + data
+                    self.result.value = self.result.value + data
                 else:
-                    self.result.value = str(self.result.value) + data
+                    self.result.value = self.result.value + data
                 self.logger.info(f"Expression: {data}")
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
+        
+        elif data in ("(",")"):
+            if self.result.value != "Error":
+                self.result.value = self.result.value.replace(" ", "")
+                if data == "(" and self.result.value[-1].isdigit():
+                    self.result.value += "*"
+                self.result.value = self.result.value + data
+                self.set_value(self.result.value)
 
         elif data in ("CE"):
             self.result.value = "0"
-            self.expression.value = self.result.value
-        
+
         elif data in ("<-"):
             self.result.value = self.result.value[:-1]
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
         elif data in ("="):
-            self.result.value = self.calculate(self.expression.value)
+            new_expression = self.close_parenthesis(self.result.value)
+            self.result.value = self.calculate(new_expression)
+            self.set_value(self.result.value, new_expression)
+            HistoryStorage.add_history(self.expression.value, self.result.value)
 
         elif data in ("%"):
             self.result.value = self.result.value.replace(" ", "")
             self.result.value = str(float(self.result.value) / 100)
             self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
         elif data in ("+/-"):
             self.result.value = self.result.value.replace(" ", "")
             if float(self.result.value) > 0:
-                self.result.value = "-" + str(self.result.value)
+                self.result.value = "-" + self.result.value
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
 
             elif float(self.result.value) < 0:
                 self.result.value = str(self.format_number(abs(float(self.result.value))))
                 self.result.value = "{:,.2f}".format(float(self.result.value)).replace(",", " ")
-            self.expression.value = self.result.value
+            self.set_value(self.result.value)
 
+        self.update()
+
+
+    def close_parenthesis(self, value):
+        open_parentheses = value.count("(")
+        close_parentheses = value.count(")")
+        while open_parentheses > close_parentheses:
+            value += ")"
+            close_parentheses += 1
+        return value
+
+    def check_correct_format(self, value):
+        if value[-1] in ("+", "-", "*", "/"):
+            self.result.value = value[:-1]
+
+    def set_value(self, value, expression=None):
+        if expression:
+            self.expression.value = expression
+        self.result.value = value
         self.update()
 
     def format_number(self, num):
         if num % 1 == 0:
             return int(num)
-        else:
-            return num
+        return num
 
     def calculate(self, expression):
         try:
             sympy_expression = sympy.sympify(expression).evalf()
             result = "{:,.2f}".format(float(sympy_expression)).replace(",", " ")
+
         except sympy.SympifyError as e:
             e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
             e.error()
-            result = "Error"
-            self.expression.value = "Error"
+            result = "Syntax Error"
 
         except ZeroDivisionError as e:
             e = InvalidExpressionException("Division by zero", self.logger)
             e.error()
-            result = "Error"
-            self.expression.value = "Error"
+            result = "Cant divide by zero"
 
         self.logger.info(str(result))
         return result
