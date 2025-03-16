@@ -9,9 +9,7 @@ class HistoryView(ft.View):
         self.controls = [
             ft.Column(
                 controls=[
-                    self.history
+                    self.history,
                 ]
             )
         ]
-
-    

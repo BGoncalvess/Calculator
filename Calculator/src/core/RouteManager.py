@@ -28,7 +28,8 @@ class RouteManager():
             case "/history":
                 self.page.views.append(self.dict_views["Calculator"])
                 self.page.views.append(self.dict_views["History"])
-
+        
+        self.page.go("/")
         self.page.update()
 
     def view_pop(self):

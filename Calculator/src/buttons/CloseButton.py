@@ -12,4 +12,3 @@ class CloseButton(IconButton):
         self.logger.info("Close button clicked")
         from core.RouteManager import RouteManager
         RouteManager.get().view_pop()
-
