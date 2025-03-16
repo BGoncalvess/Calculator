@@ -8,8 +8,10 @@ authors = [
     { name = "Flet developer", email = "you@example.com" }
 ]
 dependencies = [
+  "coloredlogs>=15.0.1",
   "flet==0.26.0",
   "pylint>=3.3.4",
+  "sympy>=1.13.3",
 ]
 
 [tool.flet]

@@ -1,16 +1,21 @@
 import logging
 import coloredlogs
+import os
 
 class LogFormat:
 
     def __init__(self, name):
         self.logger = self.setup_logger(name)
     
-    def setup_logger(self,name):
+    def setup_logger(self, name):
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
         
-        file_handler = logging.FileHandler("Calculator/logs/error.log")
+        log_directory = "Calculator/logs"
+        if not os.path.exists(log_directory):
+            os.makedirs(log_directory)
+        
+        file_handler = logging.FileHandler(os.path.join(log_directory, "error.log"))
         file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(file_formatter)
         
