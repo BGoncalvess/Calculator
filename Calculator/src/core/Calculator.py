@@ -204,12 +204,10 @@ class Calculator(ft.Container):
         try:
             sympy_expression = sympy.sympify(expression).evalf()
             result = "{:,.2f}".format(float(sympy_expression)).replace(",", " ")
-
         except sympy.SympifyError as e:
             e = InvalidExpressionException(f"Invalid expression: {expression}", self.logger)
             e.error()
             result = "Syntax Error"
-
         except ZeroDivisionError as e:
             e = InvalidExpressionException("Division by zero", self.logger)
             e.error()

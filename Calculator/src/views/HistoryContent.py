@@ -7,7 +7,7 @@ from storage.HistoryStorage import HistoryStorage
 
 class HistoryContent(ft.Column):
     def __init__(self):
-        super().__init__(width=400, height=500)
+        super().__init__(expand=True,spacing=10)
         self.logger = LogFormat(__name__).logger
         self.history_list = ft.DataTable(
             columns=[
@@ -15,27 +15,38 @@ class HistoryContent(ft.Column):
                 ft.DataColumn(label=ft.Text("Date")),
                 ft.DataColumn(label=ft.Text("Expression")),
                 ft.DataColumn(label=ft.Text("Result")),
+                ft.DataColumn(label=ft.Text("Actions")),
             ],
-            rows=[],
+            expand=True,
+            column_spacing=5,
+            heading_row_height=40,
+            data_row_min_height=40,
+            data_row_max_height=60,
         )
         self.controls = [
-            self.history_list,
-            CloseButton(),
-            ft.Column(
+            ft.Row(
                 controls=[
                     ft.Container(expand=True),
-                    ft.Row(
-                        controls=[],
-                        alignment=ft.MainAxisAlignment.END
-                    )
+                    CloseButton()
                 ],
-                expand=True
-            )
+                alignment=ft.MainAxisAlignment.END,
+            ),
+            ft.Container(
+                content=ft.Column(
+                    controls=[self.history_list],
+                    expand=True,
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+                expand=True,
+                padding=10,
+            ),
         ]
 
     def update(self):
+        self.logger.info("Updating HistoryContent")
         self.history_list.rows.clear()
-        for entry in HistoryStorage().get_history() or []:
+        for entry in reversed(HistoryStorage.get_history() or []):
+            self.logger.info(f"Adding history entry: {entry.index}, {entry.expression}, {entry.result}")
             self.history_list.rows.append(
                 ft.DataRow(
                     cells=[
@@ -43,9 +54,16 @@ class HistoryContent(ft.Column):
                         ft.DataCell(ft.Text(f"{entry.date}")),
                         ft.DataCell(ft.Text(f"{entry.expression}")),
                         ft.DataCell(ft.Text(f"{entry.result}")),
-                        ft.DataCell(DeleteButton()),
-                        ft.DataCell(CopyButton()),
+                        ft.DataCell(
+                            ft.Row(
+                                controls=[
+                                    DeleteButton(history_index=entry.index),
+                                    CopyButton(result=entry.result)
+                                ],
+                                spacing=5,
+                            )
+                        ),
                     ]
                 )
             )
-        return super().update()
+        super().update()  # Call the parent update method

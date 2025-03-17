@@ -8,8 +8,11 @@ class HistoryView(ft.View):
         self.history_content = HistoryContent()
 
         self.controls = [
-            self.history_content,  # Add HistoryContent to the view first
+            self.history_content,
         ]
 
     def did_mount(self):
-        self.history_content.update()  # Ensure the history content is updated after mounting
+        # Explicitly set the page for HistoryContent
+        self.history_content.page = self.page
+        # Update HistoryContent after the view is mounted
+        self.history_content.update()
