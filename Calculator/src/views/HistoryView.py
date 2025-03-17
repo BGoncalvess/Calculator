@@ -12,7 +12,5 @@ class HistoryView(ft.View):
         ]
 
     def did_mount(self):
-        # Explicitly set the page for HistoryContent
         self.history_content.page = self.page
-        # Update HistoryContent after the view is mounted
         self.history_content.update()

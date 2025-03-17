@@ -11,15 +11,8 @@ class DeleteButton(IconButton):
     def __on_click_handler(self, e):
         from storage.HistoryStorage import HistoryStorage
         from core.RouteManager import RouteManager
-        
         self.logger.info(f"Delete button clicked for history index: {self.history_index}")
-
-        for i, entry in enumerate(HistoryStorage.history):
-            if entry.index == self.history_index:
-                HistoryStorage.history.pop(i)
-                self.logger.warn(f"Deleted history entry: {entry.index}, {entry.expression}, {entry.result}")
-                break
-
+        HistoryStorage.remove_history(self.history_index)
         history_view = RouteManager.get().dict_views["History"]
         history_view.history_content.update()
         history_view.page.update()
