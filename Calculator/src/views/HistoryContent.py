@@ -7,7 +7,7 @@ from storage.HistoryStorage import HistoryStorage
 
 class HistoryContent(ft.Column):
     def __init__(self):
-        super().__init__(width=400,height=500)
+        super().__init__(width=400, height=500)
         self.logger = LogFormat(__name__).logger
         self.history_list = ft.DataTable(
             columns=[
