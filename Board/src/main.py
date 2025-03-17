@@ -163,6 +163,7 @@ class TrelloApp(AppLayout):
     def create_new_board(self, board_name):
         new_board = Board(self, self.store, board_name, self.page)
         self.store.add_board(new_board)
+        print(f"New board created with ID: {new_board.board_id}")  # Debug print
         self.hydrate_all_boards_view()
 
     def delete_board(self, e):

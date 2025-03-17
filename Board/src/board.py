@@ -11,6 +11,7 @@ class Board(ft.Container):
     def __init__(self, app, store: DataStore, name: str, page: ft.Page):
         self.page: ft.Page = page
         self.board_id = next(Board.id_counter)
+        print(f"Initializing Board with ID: {self.board_id}")  # Debug print
         self.store: DataStore = store
         self.app = app
         self.name = name
@@ -247,6 +248,7 @@ class Board(ft.Container):
         dialog_text.focus()
         
     def remove_list(self, list: BoardList, e):
+        print(f"Removing list with ID: {list.board_list_id} from board ID: {self.board_id}")  # Debug print
         for column in self.board_lists.controls:
             if isinstance(column, ft.Column):
                 if list in column.controls[1].controls:
@@ -254,11 +256,6 @@ class Board(ft.Container):
                     self.store.remove_list(self.board_id, list.board_list_id)
                     self.page.update()
                     return
-            elif list in self.board_lists.controls:
-                self.board_lists.controls.remove(list)
-                self.store.remove_list(self.board_id, list.board_list_id)
-                self.page.update()
-                return
         raise ValueError("List not found in board lists")
 
     def add_list(self, list):

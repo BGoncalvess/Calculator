@@ -18,6 +18,9 @@ class InMemoryStore(DataStore):
 
     def add_board(self, board: "Board"):
         self.boards[board.board_id] = board
+        if board.board_id not in self.board_lists:
+            self.board_lists[board.board_id] = []  # Ensure board_lists entry is created
+        print(f"Board added with ID: {board.board_id}")  # Debug print
 
     def get_board(self, id: int):
         return self.boards[id]
@@ -30,8 +33,13 @@ class InMemoryStore(DataStore):
         return [self.boards[b] for b in self.boards]
 
     def remove_board(self, board: "Board"):
-        del self.boards[board.board_id]
-        self.board_lists[board.board_id] = []
+        if board.board_id in self.boards:
+            del self.boards[board.board_id]
+            if board.board_id in self.board_lists:
+                del self.board_lists[board.board_id]  # Ensure board_lists entry is removed
+            print(f"Board removed with ID: {board.board_id}")  # Debug print
+        else:
+            raise KeyError(f"Board ID {board.board_id} not found")
 
     def add_list(self, board: int, list: "BoardList"):
         if board in self.board_lists:
@@ -43,6 +51,7 @@ class InMemoryStore(DataStore):
         return self.board_lists.get(board, [])
 
     def remove_list(self, board_id, list_id):
+        print(f"Removing list with ID: {list_id} from board ID: {board_id}")  # Debug print
         if board_id in self.board_lists:
             self.board_lists[board_id] = [
                 l for l in self.board_lists[board_id] if l.board_list_id != list_id
