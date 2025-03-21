@@ -14,7 +14,9 @@ def main(page: ft.Page):
     page.window.height = 500
 
 
-ft.app(target=main,
-       view=ft.AppView.WEB_BROWSER,
-       assets_dir="assets",
-       port=8080)
+# ft.app(target=main,
+#        view=ft.AppView.WEB_BROWSER,
+#        assets_dir="assets",
+#        port=8080)
+
+ft.app(target=main)

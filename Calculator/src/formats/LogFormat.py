@@ -11,7 +11,7 @@ class LogFormat:
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
         
-        log_directory = "Calculator/logs"
+        log_directory = "./logs"
         if not os.path.exists(log_directory):
             os.makedirs(log_directory)
         

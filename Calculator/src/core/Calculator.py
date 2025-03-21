@@ -139,9 +139,14 @@ class Calculator(ft.Container):
         elif data in ("(",")"):
             if self.result.value != "Error":
                 self.result.value = self.result.value.replace(" ", "")
-                if data == "(" and self.result.value[-1].isdigit():
-                    self.result.value += "*"
-                self.result.value = self.result.value + data
+                
+                if self.result.value == "0" and data == "(":
+                    self.result.value = data
+                elif data == "(" and self.result.value[-1].isdigit():
+                    self.result.value += "*("
+                else:
+                    self.result.value += data
+
                 self.set_value(self.result.value)
 
         elif data in ("CE"):
