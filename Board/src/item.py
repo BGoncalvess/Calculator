@@ -15,11 +15,27 @@ class Item(ft.Container):
         self.store: DataStore = store
         self.list = list
         self.item_text = item_text
+        self.labels = []
+
+        # Update the card_item to display labels
         self.card_item = ft.Card(
             content=ft.Row(
                 [
                     ft.Container(
-                        content=ft.Checkbox(label=f"{self.item_text}", width=200),
+                        content=ft.Column(
+                            [
+                                ft.Checkbox(label=f"{self.item_text}", width=200),
+                                ft.Row(
+                                    [
+                                        ft.Chip(
+                                            label=ft.Text(l),
+                                            bgcolor=self.label_colors.get(l, ft.Colors.BLUE_200)  # Use stored color
+                                        ) for l in self.labels
+                                    ],
+                                    wrap=True,
+                                ),
+                            ]
+                        ),
                         border_radius=ft.border_radius.all(5),
                     )
                 ],
@@ -29,6 +45,7 @@ class Item(ft.Container):
             elevation=1,
             data=self.list,
         )
+
         self.view = ft.Draggable(
             group="items",
             content=ft.DragTarget(

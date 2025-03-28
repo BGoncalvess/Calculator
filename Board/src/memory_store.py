@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+import flet as ft
 
 if TYPE_CHECKING:
     from board import Board
@@ -46,6 +47,7 @@ class InMemoryStore(DataStore):
             self.board_lists[board].append(list)
         else:
             self.board_lists[board] = [list]
+        print(f"Stored BoardList ID: {list.board_list_id} for board ID: {board}, page: {list.page}")
 
     def get_lists_by_board(self, board: int):
         return self.board_lists.get(board, [])
@@ -70,6 +72,10 @@ class InMemoryStore(DataStore):
             self.items[board_list].append(item)
         else:
             self.items[board_list] = [item]
+        if not hasattr(item, 'labels'):
+            item.labels = []
+        if not hasattr(item, 'label_colors'):
+            item.label_colors = {}
 
     def get_items(self, board_list: int):
         return self.items.get(board_list, [])
@@ -78,3 +84,14 @@ class InMemoryStore(DataStore):
         self.items[board_list] = [
             i for i in self.items[board_list] if not i.item_id == id
         ]
+
+    def update_item_labels(self, board_id: int, item_id: int, labels: list[str]) -> None:
+        for board_list_id in self.items:
+            for item in self.items[board_list_id]:
+                if item.item_id == item_id:
+                    # Preserve existing colors for unchanged labels
+                    old_label_colors = item.label_colors.copy()
+                    item.labels = labels
+                    item.label_colors = {label: old_label_colors.get(label, ft.Colors.BLUE_200) for label in labels}
+                    return
+        raise ValueError(f"Item with ID {item_id} not found")

@@ -9,6 +9,7 @@ from user import User
 class TrelloApp(AppLayout):
     def __init__(self, page: ft.Page, store: DataStore):
         self.page: ft.Page = page
+        print(f"TrelloApp init - page: {self.page}")
         self.store: DataStore = store
         self.user: str | None = None
         self.page.on_route_change = self.route_change
@@ -161,6 +162,7 @@ class TrelloApp(AppLayout):
         dialog_text.focus()
 
     def create_new_board(self, board_name):
+        print(f"Creating board with page: {self.page}")
         new_board = Board(self, self.store, board_name, self.page)
         self.store.add_board(new_board)
         print(f"New board created with ID: {new_board.board_id}")  # Debug print

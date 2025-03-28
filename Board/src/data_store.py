@@ -65,3 +65,6 @@ class DataStore:
 
     def remove_item(self, board_list, id) -> None:
         raise NotImplementedError
+    
+    def update_item_labels(self, board_id: int, item_id: int, labels: list[str]) -> None:
+        raise NotImplementedError

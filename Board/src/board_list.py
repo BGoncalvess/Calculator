@@ -11,16 +11,15 @@ from data_store import DataStore
 class BoardList(ft.Container):
     id_counter = itertools.count()
 
-    def __init__(
-        self,
-        board: "Board",
-        store: DataStore,
-        title: str,
-        page: ft.Page,
-        color: str = "",
-    ):
-        self.page: ft.Page = page
+    def __init__(self, board: "Board", store: DataStore, title: str, page: ft.Page, color: str = ""):
+        
+        # if page is None:
+        #     print("Warning: BoardList initialized with None page")
+
+        assert page is not None, "BoardList requires a valid page instance"
+        self._page: ft.Page = page
         self.board_list_id = next(BoardList.id_counter)
+        print(f"Creating BoardList ID: {self.board_list_id} with page: {self._page}")
         self.store: DataStore = store
         self.board = board
         self.title = title
@@ -141,62 +140,151 @@ class BoardList(ft.Container):
                     content=self.inner_list,
                     data=self,
                     on_accept=self.list_drag_accept,
-                    on_will_accept=self.list_will_drag_accept,
+                    on_will_accept=self.item_will_drag_accept,
                     on_leave=self.list_drag_leave,
                 ),
+                data=self, # This sets src.data to the BoardList instance
             ),
-            data=self,
+            data=self, # This sets src.data to the BoardList instance
             on_accept=self.item_drag_accept,
             on_will_accept=self.item_will_drag_accept,
             on_leave=self.item_drag_leave,
         )
         super().__init__(content=self.view, data=self)
 
+    @property
+    def page(self):
+        return self._page
+    
+    @page.setter
+    def page(self, value):
+        self._page = value
+        print(f"Setting page for BoardList ID: {self.board_list_id} to: {value}")
+    
     def item_drag_accept(self, e):
-        src = self.page.get_control(e.src_id)
+        src = self._page.get_control(e.src_id) 
         self.add_item(src.data.item_text)
         src.data.list.remove_item(src.data)
         self.end_indicator.opacity = 0.0
         self.update()
 
     def item_will_drag_accept(self, e):
+        if self._page is None:
+            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
+            self._page = self.board.page
+            if self._page is None:
+                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
+                return False
         if e.data == "true":
             self.end_indicator.opacity = 1.0
-        self.update()
-
+        if self._page is not None:  # Only update if page is set
+            self.update()
+        return True
+    
     def item_drag_leave(self, e):
         self.end_indicator.opacity = 0.0
-        self.update()
+        if self._page is None:
+            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
+            self._page = self.board.page
+            if self._page is None:
+                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
+                return
+        if self._page is not None:  # Only update if page is set
+            self.update()
 
     def list_drag_accept(self, e):
-        src = self.page.get_control(e.src_id)
-        l = self.board.board_lists.controls
-        to_index = l.index(self)
-        from_index = l.index(src.data)
-        l[to_index], l[from_index] = l[from_index], l[to_index]
-        self.board.board_lists.update()
-        self.inner_list.border = ft.border.all(2, ft.Colors.BLACK12)
-        self.page.update()
+        if self._page is None:
+            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
+            self._page = self.board.page
+            if self._page is None:
+                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
+                return
+    
+        src = self._page.get_control(e.src_id)  # The dragged BoardList instance
+        src_list = src.data if src and hasattr(src, 'data') else None
+        print(f"Dragging from ID: {src_list.board_list_id if src_list else 'None'} to ID: {self.board_list_id}")
+        
+        target_list = self
 
-    def list_will_drag_accept(self, e):
-        if e.data == "true":
-            self.inner_list.border = ft.border.all(2, ft.Colors.BLACK)
-        self.update()
+        if not src_list:
+            print(f"Warning: Source data is None for src_id {e.src_id}")
+            return  # Abort if source is invalid
 
+        print(f"Event src_id: {e.src_id}")
+        print(f"Source control: {src}, Data: {src_list}")
+        print(f"Target list: {target_list}")
+
+        # Ensure the source list retains its page reference
+        if src_list.page is None:
+            src_list.page = self._page  # Reassign the page from the target
+            print(f"Reassigned page for BoardList ID: {src_list.board_list_id}")
+
+        # Find the source and target lists within the board_lists.controls structure
+        board_controls = self.board.board_lists.controls
+        src_column = None
+        target_column = None
+        src_index = None
+        target_index = None
+
+        # Search through all columns to locate the source and target lists
+        for column in board_controls:
+            if isinstance(column, ft.Column):
+                column_lists = column.controls[1].controls # The list container inside the column
+                for i, control in enumerate(column_lists):
+                    if isinstance(control, ft.DragTarget) and hasattr(control, 'data'):
+                        if control.data == src_list:
+                            src_column = column
+                            src_index = i
+                        if control.data == target_list:
+                            target_column = column
+                            target_index = i
+
+        # If both source and target are found
+        if src_column and target_column:
+            # Case 1: Same column, swap positions
+            if src_column == target_column:
+                column_lists = src_column.controls[1].controls
+                column_lists[src_index], column_lists[target_index] = (
+                    column_lists[target_index],
+                    column_lists[src_index],
+                )
+            # Case 2: Different columns, move from source to target
+            else:
+                src_column.controls[1].controls.pop(src_index)  # Remove from source column
+                target_column.controls[1].controls.insert(target_index, src_list.view)  # Insert into target column
+                src_list.column = target_column  # Update the column reference
+
+            # Reset border and update the UI
+            self.inner_list.border = ft.border.all(2, ft.Colors.BLACK12)
+            self.board.board_lists.update()
+            self._page.update()
+        else:
+            print(f"Source column: {src_column}, Target column: {target_column}")
+            raise ValueError("Source or target list not found in board columns")
+    
     def list_drag_leave(self, e):
         self.inner_list.border = ft.border.all(2, ft.Colors.BLACK12)
-        self.update()
+        if self._page is None:
+            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
+            self._page = self.board.page
+            if self._page is None:
+                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
+                return
+        if self._page is not None:  # Only update if page is set
+            self.update()
 
     def delete_list(self, e):
         self.board.remove_list(self, e)
 
     def edit_title(self, e):
+        print(f"Editing title for BoardList ID: {self.board_list_id}")
         self.header.controls[0] = self.edit_field
         self.header.controls[1].visible = False
         self.update()
 
     def save_title(self, e):
         self.title = self.edit_field.controls[0].value
+        print(f"Saving new title: {self.title}")
         self.header.controls[0] = ft.Text(
             value=self.title,
             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
@@ -264,7 +352,7 @@ class BoardList(ft.Container):
             self.store.add_item(self.board_list_id, new_item)
             self.new_item_field.value = ""
 
-        self.page.update()
+        self._page.update()
 
     def remove_item(self, item: Item):
         controls_list = [x.controls[1] for x in self.items.controls]

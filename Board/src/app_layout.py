@@ -88,7 +88,9 @@ class AppLayout(ft.Row):
         self.page.update()
 
     def set_board_view(self, i):
-        self.active_view = self.store.get_boards()[i]
+        board = self.store.get_boards()[i]
+        print(f"Setting active view to Board ID: {board.board_id}")
+        self.active_view = board
         self.sidebar.bottom_nav_rail.selected_index = i
         self.sidebar.top_nav_rail.selected_index = None
         self.page_resize()
