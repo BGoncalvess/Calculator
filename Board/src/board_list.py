@@ -103,7 +103,7 @@ class BoardList(ft.Container):
                         content=ft.Row(
                             [
                                 ft.Icon(ft.Icons.ADD),
-                                ft.Text("add card", color=ft.Colors.BLACK38),
+                                ft.Text("add list", color=ft.Colors.BLACK38),
                             ],
                             tight=True,
                         ),

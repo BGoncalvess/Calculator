@@ -23,7 +23,7 @@ class Board(ft.Container):
         self.name = name
         
         self.add_list_button = ft.FloatingActionButton(
-            icon=ft.Icons.ADD, text="Add Card", height=30, on_click=self.create_list
+            icon=ft.Icons.ADD, text="Add List", height=30, on_click=self.create_list
         )
 
         self.add_column_button = ft.FloatingActionButton(
