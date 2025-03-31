@@ -53,11 +53,13 @@ class InMemoryStore(DataStore):
         return self.board_lists.get(board, [])
 
     def remove_list(self, board_id, list_id):
-        print(f"Removing list with ID: {list_id} from board ID: {board_id}")  # Debug print
+        print(f"Removing list with ID: {list_id} from board ID: {board_id}")
         if board_id in self.board_lists:
             self.board_lists[board_id] = [
                 l for l in self.board_lists[board_id] if l.board_list_id != list_id
             ]
+            if not self.board_lists[board_id]:  # If no lists remain, remove the board_id entry
+                del self.board_lists[board_id]
         else:
             raise KeyError(f"Board ID {board_id} not found")
 
@@ -68,30 +70,31 @@ class InMemoryStore(DataStore):
         return [self.users[u] for u in self.users]
 
     def add_item(self, board_list: int, item: "Item"):
-        if board_list in self.items:
-            self.items[board_list].append(item)
-        else:
-            self.items[board_list] = [item]
-        if not hasattr(item, 'labels'):
-            item.labels = []
-        if not hasattr(item, 'label_colors'):
-            item.label_colors = {}
+        print(f"Store adding item {item.item_id} to list {board_list}")
+        if board_list not in self.items:
+            self.items[board_list] = []
+        self.items[board_list].append(item)
+        print(f"Added item {item.item_id} to list {board_list} with labels {item.labels} and colors {item.label_colors}")
 
     def get_items(self, board_list: int):
         return self.items.get(board_list, [])
 
     def remove_item(self, board_list: int, id: int):
-        self.items[board_list] = [
-            i for i in self.items[board_list] if not i.item_id == id
-        ]
+        if board_list in self.items:
+            self.items[board_list] = [i for i in self.items[board_list] if i.item_id != id]
+            print(f"Removed item {id} from list {board_list}")
+        else:
+            print(f"Warning: List {board_list} not found in store during remove_item")
 
     def update_item_labels(self, board_id: int, item_id: int, labels: list[str]) -> None:
         for board_list_id in self.items:
             for item in self.items[board_list_id]:
                 if item.item_id == item_id:
-                    # Preserve existing colors for unchanged labels
+                    # Preserve existing colors, only update labels
                     old_label_colors = item.label_colors.copy()
                     item.labels = labels
+                    # Only set colors for new labels not in old_label_colors
                     item.label_colors = {label: old_label_colors.get(label, ft.Colors.BLUE_200) for label in labels}
+                    print(f"Updated item {item_id} in list {board_list_id} with labels {item.labels} and colors {item.label_colors}")
                     return
         raise ValueError(f"Item with ID {item_id} not found")

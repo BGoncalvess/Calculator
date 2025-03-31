@@ -43,6 +43,7 @@ class Board(ft.Container):
         )
 
         self.column_manager = ColumnManager(self.page)  # Pass page to ColumnManager
+        
         self.board_lists = ft.Row(
             controls=self.column_manager.get_columns(),
             vertical_alignment=ft.CrossAxisAlignment.START,
@@ -80,54 +81,78 @@ class Board(ft.Container):
 
         def search_labels(e):
             search_term = search_field.value.lower()
-            filtered_items = [
-                item for item in all_items
-                if any(label.lower().startswith(search_term) for label in item.labels)
-            ]
-            update_item_list(filtered_items)
+            print(f"Searching for: '{search_term}'")
+            if not search_term:  # If search field is empty, show all lists
+                update_table(all_lists)
+            else:
+                filtered_lists = [
+                    bl for bl in all_lists
+                    if search_term in bl.title.lower() or
+                    any(search_term in label.lower() for item in self.store.get_items(bl.board_list_id) for label in item.labels)
+                ]
+                print(f"Filtered lists: {[bl.title for bl in filtered_lists]}")
+                update_table(filtered_lists)
 
-        def update_item_list(items_to_show):
-            item_list.controls = []
-            for item in items_to_show:
-                label_row = ft.Row(
-                    [
-                        ft.Chip(
-                            label=ft.Text(l),
-                            bgcolor=item.label_colors.get(l, ft.Colors.BLUE_200)
-                        ) for l in item.labels
-                    ],
-                    wrap=True,
-                    scroll=ft.ScrollMode.AUTO,  # Allow horizontal scrolling for many labels
-                    width=400,  # Constrain width to fit dialog
-                )
-                item_list.controls.append(
-                    ft.Column([
-                        ft.Text(item.item_text),
-                        label_row,
-                    ])
-                )
-            self.page.update()
+        def update_table(lists_to_show):
+            table.rows.clear()  # Clear existing rows
+            print("Updating table with lists and their items' labels:")
+            seen_labels = set()
+            for bl in lists_to_show:
+                print(f"List ID {bl.board_list_id}: {bl.title}")
+                label_color_map = {}
+                for item in self.store.get_items(bl.board_list_id):
+                    for label in item.labels:
+                        label_color_map[label] = item.label_colors.get(label, ft.Colors.BLUE_200)
+                        print(f"  Item {item.item_id}: Label: {label}, Color: {label_color_map[label]}")
+                for label, color in label_color_map.items():
+                    list_label_key = (bl.board_list_id, label)
+                    if list_label_key not in seen_labels:
+                        seen_labels.add(list_label_key)
+                        table.rows.append(
+                            ft.DataRow(cells=[
+                                ft.DataCell(ft.Text(bl.title)),
+                                ft.DataCell(ft.Text(label)),
+                                ft.DataCell(ft.Text(str(color))),  # str() for readability
+                            ])
+                        )
+            # Only call update() if the table is already on the page
+            if table.page is not None:
+                table.update()
+                self.page.update()
 
-        all_items = []
-        for bl in self.store.get_lists_by_board(self.board_id):
-            all_items.extend(self.store.get_items(bl.board_list_id))
+        # Collect all BoardLists for this board
+        all_lists = self.store.get_lists_by_board(self.board_id)
+        print(f"Found {len(all_lists)} lists for board ID {self.board_id}")
 
-        # Add label_colors attribute to items if not present
-        for item in all_items:
-            if not hasattr(item, 'label_colors'):
-                item.label_colors = {}  # Dictionary to store label -> color mapping
+        # Ensure all items have labels and label_colors attributes
+        for bl in all_lists:
+            for item in self.store.get_items(bl.board_list_id):
+                if not hasattr(item, 'labels'):
+                    item.labels = []
+                if not hasattr(item, 'label_colors'):
+                    item.label_colors = {}
 
-        search_field = ft.TextField(label="Search Labels", on_change=search_labels)
-        item_list = ft.Column([], scroll=ft.ScrollMode.AUTO)
+        search_field = ft.TextField(label="Search Lists or Labels", on_change=search_labels)
+        table = ft.DataTable(
+            columns=[
+                ft.DataColumn(ft.Text("List")),
+                ft.DataColumn(ft.Text("Label")),
+                ft.DataColumn(ft.Text("Color")),
+            ],
+            rows=[],
+            column_spacing=20,
+            heading_row_height=40,
+        )
 
-        update_item_list(all_items)
+        # Populate table initially without updating (since it’s not on the page yet)
+        update_table(all_lists)
 
         dialog = ft.AlertDialog(
             title=ft.Text("Manage Labels"),
             content=ft.Column(
                 [
                     search_field,
-                    item_list,
+                    ft.Column([table], scroll=ft.ScrollMode.AUTO, height=400, width=600),
                 ],
                 scroll=ft.ScrollMode.AUTO,
                 height=500,
@@ -329,26 +354,26 @@ class Board(ft.Container):
         print(f"Removing list with ID: {list.board_list_id} from board ID: {self.board_id}")
         removed = False
         
-        # Check columns
+        # Remove from UI
         if self.board_lists.controls and isinstance(self.board_lists.controls[0], ft.Column):
             for column in self.board_lists.controls:
                 if isinstance(column, ft.Column) and list.view in column.controls[1].controls:
                     column.controls[1].controls.remove(list.view)
                     removed = True
                     break
-        
-        # Check top-level board_lists.controls (non-column case)
         if not removed and list.view in self.board_lists.controls:
             self.board_lists.controls.remove(list.view)
             removed = True
-        
-        # Check page.controls (since we added it there)
         if not removed and list.view in self.page.controls:
             self.page.controls.remove(list.view)
             removed = True
         
+        # Remove from store
         if removed:
             self.store.remove_list(self.board_id, list.board_list_id)
+            # Clean up items associated with this list
+            if list.board_list_id in self.store.items:
+                del self.store.items[list.board_list_id]
             self.page.update()
         else:
             raise ValueError("List not found in board lists")
@@ -438,5 +463,15 @@ class Board(ft.Container):
     def delete_column(self, e):
         column_index = e.control.data
         if column_index < len(self.board_lists.controls):
+            column = self.board_lists.controls[column_index]
+            # Remove all lists in this column from the store
+            if isinstance(column, ft.Column):
+                for control in column.controls[1].controls:
+                    if isinstance(control, ft.DragTarget) and hasattr(control, 'data'):
+                        list_obj = control.data
+                        print(f"Removing list ID {list_obj.board_list_id} from store due to column deletion")
+                        self.store.remove_list(self.board_id, list_obj.board_list_id)
+                        if list_obj.board_list_id in self.store.items:
+                            del self.store.items[list_obj.board_list_id]
             del self.board_lists.controls[column_index]
             self.page.update()

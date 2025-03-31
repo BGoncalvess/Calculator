@@ -24,9 +24,10 @@ class BoardList(ft.Container):
         self.board = board
         self.title = title
         self.color = color
-        self.column = None  # Add reference to the column
+        self.column = None
         self.items = ft.Column([], tight=True, spacing=4)
         self.items.controls = self.store.get_items(self.board_list_id)
+        
         self.new_item_field = ft.TextField(
             label="new card name",
             height=50,
@@ -85,15 +86,6 @@ class BoardList(ft.Container):
                                 ),
                                 on_click=self.delete_list,
                             ),
-                            ft.PopupMenuItem(),
-                            ft.PopupMenuItem(
-                                content=ft.Text(
-                                    value="Move List",
-                                    theme_style=ft.TextThemeStyle.LABEL_MEDIUM,
-                                    text_align=ft.TextAlign.CENTER,
-                                    color=self.color,
-                                )
-                            ),
                         ],
                     ),
                     padding=ft.padding.only(right=-10),
@@ -139,16 +131,16 @@ class BoardList(ft.Container):
                     group="lists",
                     content=self.inner_list,
                     data=self,
-                    on_accept=self.list_drag_accept,
+                    on_accept=self.drag_accept,
                     on_will_accept=self.item_will_drag_accept,
-                    on_leave=self.list_drag_leave,
+                    on_leave=self.drag_leave,
                 ),
-                data=self, # This sets src.data to the BoardList instance
+                data=self,
             ),
-            data=self, # This sets src.data to the BoardList instance
-            on_accept=self.item_drag_accept,
+            data=self,
+            on_accept=self.drag_accept,
             on_will_accept=self.item_will_drag_accept,
-            on_leave=self.item_drag_leave,
+            on_leave=self.drag_leave,
         )
         super().__init__(content=self.view, data=self)
 
@@ -160,127 +152,86 @@ class BoardList(ft.Container):
     def page(self, value):
         self._page = value
         print(f"Setting page for BoardList ID: {self.board_list_id} to: {value}")
-    
-    def item_drag_accept(self, e):
-        src = self._page.get_control(e.src_id) 
-        self.add_item(src.data.item_text)
-        src.data.list.remove_item(src.data)
-        self.end_indicator.opacity = 0.0
-        self.update()
-
+            
     def item_will_drag_accept(self, e):
-        if self._page is None:
-            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
-            self._page = self.board.page
-            if self._page is None:
-                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
-                return False
         if e.data == "true":
             self.end_indicator.opacity = 1.0
-        if self._page is not None:  # Only update if page is set
-            self.update()
+        else:
+            self.end_indicator.opacity = 0.0
+        self.end_indicator.update()  # Update the specific control
         return True
     
-    def item_drag_leave(self, e):
-        self.end_indicator.opacity = 0.0
-        if self._page is None:
-            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
-            self._page = self.board.page
-            if self._page is None:
-                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
-                return
-        if self._page is not None:  # Only update if page is set
-            self.update()
+    def drag_accept(self, e):
+        src = self.page.get_control(e.src_id)
+        src_item = src.data
+        print(f"Dragging item {src_item.item_id} with labels {src_item.labels}")
+        if not src_item or src_item.list == self:
+            return
 
-    def list_drag_accept(self, e):
-        if self._page is None:
-            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
-            self._page = self.board.page
-            if self._page is None:
-                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
-                return
-    
-        src = self._page.get_control(e.src_id)  # The dragged BoardList instance
-        src_list = src.data if src and hasattr(src, 'data') else None
-        print(f"Dragging from ID: {src_list.board_list_id if src_list else 'None'} to ID: {self.board_list_id}")
-        
-        target_list = self
+        src_list = src_item.list
+        for col in src_list.items.controls:
+            if src_item in col.controls:
+                src_list.items.controls.remove(col)
+                break
+        src_list.store.remove_item(src_list.board_list_id, src_item.item_id)
 
-        if not src_list:
-            print(f"Warning: Source data is None for src_id {e.src_id}")
-            return  # Abort if source is invalid
+        new_column = ft.Column(
+            [
+                ft.Container(bgcolor=ft.colors.BLACK26, border_radius=30, height=3, width=200, opacity=0.0),
+                src_item,
+            ],
+            tight=True,
+            spacing=4,
+        )
+        self.items.controls.append(new_column)
+        self.store.add_item(self.board_list_id, src_item)
+        src_item.list = self
+        if hasattr(src_item, 'update_card_content'):
+            src_item.update_card_content()
 
-        print(f"Event src_id: {e.src_id}")
-        print(f"Source control: {src}, Data: {src_list}")
-        print(f"Target list: {target_list}")
+        src_list.items.update()
+        self.items.update()
+        self.page.update()
+        print(f"Moved item {src_item.item_id} to list {self.board_list_id} with labels {src_item.labels}")
 
-        # Ensure the source list retains its page reference
-        if src_list.page is None:
-            src_list.page = self._page  # Reassign the page from the target
-            print(f"Reassigned page for BoardList ID: {src_list.board_list_id}")
-
-        # Find the source and target lists within the board_lists.controls structure
-        board_controls = self.board.board_lists.controls
-        src_column = None
-        target_column = None
-        src_index = None
-        target_index = None
-
-        # Search through all columns to locate the source and target lists
-        for column in board_controls:
-            if isinstance(column, ft.Column):
-                column_lists = column.controls[1].controls # The list container inside the column
-                for i, control in enumerate(column_lists):
-                    if isinstance(control, ft.DragTarget) and hasattr(control, 'data'):
-                        if control.data == src_list:
-                            src_column = column
-                            src_index = i
-                        if control.data == target_list:
-                            target_column = column
-                            target_index = i
-
-        # If both source and target are found
-        if src_column and target_column:
-            # Case 1: Same column, swap positions
-            if src_column == target_column:
-                column_lists = src_column.controls[1].controls
-                column_lists[src_index], column_lists[target_index] = (
-                    column_lists[target_index],
-                    column_lists[src_index],
-                )
-            # Case 2: Different columns, move from source to target
-            else:
-                src_column.controls[1].controls.pop(src_index)  # Remove from source column
-                target_column.controls[1].controls.insert(target_index, src_list.view)  # Insert into target column
-                src_list.column = target_column  # Update the column reference
-
-            # Reset border and update the UI
-            self.inner_list.border = ft.border.all(2, ft.Colors.BLACK12)
-            self.board.board_lists.update()
-            self._page.update()
-        else:
-            print(f"Source column: {src_column}, Target column: {target_column}")
-            raise ValueError("Source or target list not found in board columns")
-    
-    def list_drag_leave(self, e):
+    def drag_leave(self, e):
         self.inner_list.border = ft.border.all(2, ft.Colors.BLACK12)
-        if self._page is None:
-            print(f"Error: BoardList ID: {self.board_list_id} has no page reference, attempting to recover...")
-            self._page = self.board.page
-            if self._page is None:
-                print(f"Error: Could not recover page for BoardList ID: {self.board_list_id}")
-                return
-        if self._page is not None:  # Only update if page is set
-            self.update()
+        self.inner_list.update()
 
     def delete_list(self, e):
         self.board.remove_list(self, e)
 
     def edit_title(self, e):
-        print(f"Editing title for BoardList ID: {self.board_list_id}")
-        self.header.controls[0] = self.edit_field
-        self.header.controls[1].visible = False
-        self.update()
+        new_title_field = ft.TextField(
+            label="New List Name",
+            value=self.title,  # Pre-fill with current title
+            on_submit=lambda e: save_and_close(e),
+        )
+
+        def save_and_close(e):
+            if new_title_field.value:  # Check if the field is not empty
+                self.title = new_title_field.value
+                self.header.controls[0].value = self.title
+                print(f"Saving new title: {self.title}")
+                self.page.close(edit_dialog)
+                self.page.update()
+        
+        edit_dialog = ft.AlertDialog(
+            title=ft.Text("Edit List Name"),
+            content=new_title_field,
+            actions=[
+                ft.Row(
+                    [
+                        ft.ElevatedButton("Cancel", on_click=lambda e: self.page.close(edit_dialog)),
+                        ft.ElevatedButton("Save",bgcolor=ft.Colors.BLUE_200, on_click=save_and_close),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+            ],
+        )
+        
+        self.page.open(edit_dialog)
+        new_title_field.focus()
 
     def save_title(self, e):
         self.title = self.edit_field.controls[0].value
@@ -300,21 +251,13 @@ class BoardList(ft.Container):
             return
         self.add_item()
 
-    def add_item(
-        self,
-        item: str | None = None,
-        chosen_control: ft.Draggable | None = None,
-        swap_control: ft.Draggable | None = None,
-    ):
-
+    def add_item(self, item: str | None = None, chosen_control: ft.Draggable | None = None, swap_control: ft.Draggable | None = None):
         controls_list = [x.controls[1] for x in self.items.controls]
         to_index = (
             controls_list.index(swap_control) if swap_control in controls_list else None
         )
         from_index = (
-            controls_list.index(chosen_control)
-            if chosen_control in controls_list
-            else None
+            controls_list.index(chosen_control) if chosen_control in controls_list else None
         )
         control_to_add = ft.Column(
             [
@@ -329,28 +272,35 @@ class BoardList(ft.Container):
             ]
         )
 
-        # rearrange (i.e. drag drop from same list)
+        # Case 1: Rearrange within the same list (drag-drop within list)
         if (from_index is not None) and (to_index is not None):
             self.items.controls.insert(to_index, self.items.controls.pop(from_index))
             self.set_indicator_opacity(swap_control, 0.0)
 
-        # insert (drag from other list to middle of this list)
-        elif to_index is not None:
-            new_item = Item(self, self.store, item)
-            control_to_add.controls.append(new_item)
+        # Case 2: Insert an existing item from another list at a specific position
+        elif to_index is not None and chosen_control is not None and isinstance(chosen_control, Item):
+            control_to_add.controls.append(chosen_control)
             self.items.controls.insert(to_index, control_to_add)
+            self.store.add_item(self.board_list_id, chosen_control)
 
-        # add new (drag from other list to end of this list, or use add item button)
+        # Case 3: Add a new item (from text field) or transfer an existing item to the end
         else:
-            new_item = (
-                Item(self, self.store, item)
-                if item
-                else Item(self, self.store, self.new_item_field.value)
-            )
-            control_to_add.controls.append(new_item)
-            self.items.controls.append(control_to_add)
-            self.store.add_item(self.board_list_id, new_item)
-            self.new_item_field.value = ""
+            if chosen_control and isinstance(chosen_control, Item):
+                # Transferring an existing item
+                control_to_add.controls.append(chosen_control)
+                self.items.controls.append(control_to_add)
+                self.store.add_item(self.board_list_id, chosen_control)
+            else:
+                # Creating a new item from text
+                new_item = (
+                    Item(self, self.store, item)
+                    if item
+                    else Item(self, self.store, self.new_item_field.value)
+                )
+                control_to_add.controls.append(new_item)
+                self.items.controls.append(control_to_add)
+                self.store.add_item(self.board_list_id, new_item)
+                self.new_item_field.value = ""
 
         self._page.update()
 

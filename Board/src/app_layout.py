@@ -28,6 +28,7 @@ class AppLayout(ft.Row):
                             ft.Text(
                                 value="Your Boards",
                                 theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM,
+                                color=ft.Colors.BLACK87
                             ),
                             expand=True,
                             padding=ft.padding.only(top=15),
@@ -38,10 +39,7 @@ class AppLayout(ft.Row):
                                 icon=ft.Icons.ADD,
                                 on_click=self.app.add_board,
                                 style=ft.ButtonStyle(
-                                    bgcolor={
-                                        ft.ControlState.DEFAULT: ft.Colors.GREEN_300,
-                                        ft.ControlState.HOVERED: ft.Colors.GREEN_400,
-                                    },
+                                    color=ft.Colors.BLACK87,
                                     shape={
                                         ft.ControlState.DEFAULT: ft.RoundedRectangleBorder(
                                             radius=3
@@ -63,8 +61,9 @@ class AppLayout(ft.Row):
                             height=40,
                             text_size=12,
                             border_color=ft.Colors.BLACK26,
-                            focused_border_color=ft.Colors.BLUE_ACCENT,
+                            focused_border_color=ft.Colors.BLACK87,
                             suffix_icon=ft.Icons.SEARCH,
+                            color=ft.Colors.BLACK87
                         )
                     ]
                 ),

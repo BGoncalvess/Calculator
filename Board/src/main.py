@@ -15,10 +15,16 @@ class TrelloApp(AppLayout):
         self.page.on_route_change = self.route_change
         self.boards = self.store.get_boards()
         self.login_profile_button = ft.PopupMenuItem(text="Log in", on_click=self.login)
+
+        self.dark_mode_toggle = ft.PopupMenuItem(
+            text="Enable Dark Mode",
+            on_click=self.toggle_dark_mode
+        )
+
         self.appbar_items = [
             self.login_profile_button,
             ft.PopupMenuItem(),  # divider
-            ft.PopupMenuItem(text="Settings"),
+            self.dark_mode_toggle,
         ]
         self.appbar = ft.AppBar(
             leading=ft.Icon(ft.Icons.GRID_GOLDENRATIO_ROUNDED),
@@ -31,7 +37,7 @@ class TrelloApp(AppLayout):
             ),
             center_title=False,
             toolbar_height=75,
-            bgcolor=ft.Colors.AMBER_400,
+            bgcolor=ft.Colors.GREY_400,
             actions=[
                 ft.Container(
                     content=ft.PopupMenuButton(items=self.appbar_items),
@@ -50,6 +56,19 @@ class TrelloApp(AppLayout):
             expand=True,
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
+
+    def toggle_dark_mode(self, e):
+        if self.page.theme_mode == ft.ThemeMode.LIGHT:
+            self.page.theme_mode = ft.ThemeMode.DARK
+            self.dark_mode_toggle.text = "Disable Dark Mode"
+            self.appbar.bgcolor = ft.Colors.BLACK45  # Darker orange for dark mode
+            self.sidebar.bgcolor = ft.Colors.BLACK45  # Darker indigo for dark mode
+        else:
+            self.page.theme_mode = ft.ThemeMode.LIGHT
+            self.dark_mode_toggle.text = "Enable Dark Mode"
+            self.appbar.bgcolor = ft.Colors.GREY_400  # Light orange for light mode
+            self.sidebar.bgcolor = ft.Colors.GREY_400  # Light indigo for light mode
+        self.page.update()
 
     def initialize(self):
         self.page.views.append(
