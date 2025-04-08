@@ -131,14 +131,14 @@ class BoardList(ft.Container):
                     group="lists",
                     content=self.inner_list,
                     data=self,
-                    on_accept=self.drag_accept,
+                    on_accept=self.accept_list,  # Handle list drops
                     on_will_accept=self.item_will_drag_accept,
                     on_leave=self.drag_leave,
                 ),
                 data=self,
             ),
             data=self,
-            on_accept=self.drag_accept,
+            on_accept=self.accept_item,  # Handle item drops
             on_will_accept=self.item_will_drag_accept,
             on_leave=self.drag_leave,
         )
@@ -163,9 +163,16 @@ class BoardList(ft.Container):
     
     def drag_accept(self, e):
         src = self.page.get_control(e.src_id)
-        src_item = src.data
+        if src is None:
+            print("src is None - Control not found on page")
+            return
+        src_data = src.data
+        if not isinstance(src_data, Item):
+            print(f"Expected Item, got {type(src_data).__name__}")
+            return
+        src_item = src_data
         print(f"Dragging item {src_item.item_id} with labels {src_item.labels}")
-        if not src_item or src_item.list == self:
+        if src_item.list == self:
             return
 
         src_list = src_item.list
@@ -314,3 +321,41 @@ class BoardList(ft.Container):
         controls_list = [x.controls[1] for x in self.items.controls]
         self.items.controls[controls_list.index(item)].controls[0].opacity = opacity
         self.view.update()
+
+    def accept_item(self, e):
+        src = self.page.get_control(e.src_id)
+        if src is None:
+            print("src is None - Control not found on page")
+            return
+        src_item = src.data
+        if not isinstance(src_item, Item):
+            print(f"Expected Item, got {type(src_item).__name__}")
+            return
+        src_list = src_item.list
+        if src_list == self:
+            return  # Dropped on the same list, do nothing
+
+        # Remove from source list
+        src_list.remove_item(src_item)
+
+        # Add to target list at the end
+        self.add_item(chosen_control=src_item)
+
+        # Update the item's list reference
+        src_item.list = self
+
+        # Update UI
+        self.page.update()
+
+    def accept_list(self, e):
+        src = self.page.get_control(e.src_id)
+        if src is None:
+            print("src is None - Control not found on page")
+            return
+        src_list = src.data
+        if not isinstance(src_list, BoardList):
+            print(f"Expected BoardList, got {type(src_list).__name__}")
+            return
+        print(f"List {src_list.board_list_id} dropped onto list {self.board_list_id}")
+        # Implement list reordering logic here if desired
+        self.page.update()
