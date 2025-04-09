@@ -27,6 +27,12 @@ class Item(ft.Container):
             tooltip="Add Label",
             on_click=self.add_label_dialog,
         )
+        
+        self.delete_button = ft.IconButton(
+            icon=ft.Icons.DELETE,
+            tooltip="Delete Card",
+            on_click=self.delete_item,
+        )
 
         self.card_item = ft.Card(
             content=ft.Row(
@@ -35,19 +41,20 @@ class Item(ft.Container):
                         content=ft.Column(
                             [
                                 ft.Checkbox(label=f"{self.item_text}", width=200),
-                                self.build_labels_row(),  # Dynamic label row
+                                self.build_labels_row(),
                             ]
                         ),
                         border_radius=ft.border_radius.all(5),
                     ),
                     self.add_label_button,
+                    self.delete_button
                 ],
                 width=250,
                 wrap=True,
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
             elevation=1,
-            data=self  # Optional, keep if needed elsewhere
+            data=self 
         )
 
         self.view = ft.Draggable(
@@ -58,9 +65,8 @@ class Item(ft.Container):
                 on_accept=self.drag_accept,
                 on_leave=self.drag_leave,
                 on_will_accept=self.drag_will_accept,
-                # Remove data=self from DragTarget unless needed for other logic
             ),
-            data=self  # Set data on Draggable
+            data=self
         )
 
         uid=f"item_{self.item_id}"
@@ -315,3 +321,6 @@ class Item(ft.Container):
             del self.label_colors[label]
             self.store.update_item_labels(self.list.board.board_id, self.item_id, self.labels)
             self.update_card_content()
+
+    def delete_item(self, e):
+        self.list.remove_item(self)

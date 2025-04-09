@@ -8,13 +8,6 @@ class ColumnManager(ft.Container):
         self.columns = []
         
     def add_column(self, column_name, color):
-        # Container for lists (starts empty with a placeholder)
-        lists_container = ft.Column(
-            controls=[ft.Container(height=100, width=250, bgcolor=ft.Colors.TRANSPARENT)],  # Placeholder
-            expand=True,  # Takes up available space
-            scroll=ft.ScrollMode.AUTO,  # Optional: allows scrolling if lists overflow
-        )
-
         lists_container = ft.Column(
             controls=[],
             expand=True,
@@ -42,6 +35,8 @@ class ColumnManager(ft.Container):
                     on_leave=lambda e: self.highlight_column(new_column, False),
                 ),
             ],
+            scroll=ft.ScrollMode.AUTO,  # Add scrolling to the new_column
+            expand=True,  # Optional: helps with layout flexibility
         )
         self.columns.append(new_column)
         return new_column

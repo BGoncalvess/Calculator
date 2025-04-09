@@ -103,7 +103,7 @@ class BoardList(ft.Container):
                         content=ft.Row(
                             [
                                 ft.Icon(ft.Icons.ADD),
-                                ft.Text("add list", color=ft.Colors.BLACK38),
+                                ft.Text("add list"),
                             ],
                             tight=True,
                         ),
@@ -204,7 +204,7 @@ class BoardList(ft.Container):
     def edit_title(self, e):
         new_title_field = ft.TextField(
             label="New List Name",
-            value=self.title,  # Pre-fill with current title
+            value=self.title,
             on_submit=lambda e: save_and_close(e),
         )
 
@@ -223,7 +223,7 @@ class BoardList(ft.Container):
                 ft.Row(
                     [
                         ft.ElevatedButton("Cancel", on_click=lambda e: self.page.close(edit_dialog)),
-                        ft.ElevatedButton("Save",bgcolor=ft.Colors.BLUE_200, on_click=save_and_close),
+                        ft.ElevatedButton("Save", on_click=save_and_close),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
@@ -326,7 +326,7 @@ class BoardList(ft.Container):
             return
         src_list = src_item.list
         if src_list == self:
-            return  # Dropped on the same list, do nothing
+            return
 
         # Remove from source list
         src_list.remove_item(src_item)

@@ -28,7 +28,7 @@ class Sidebar(ft.Container):
             label_type=ft.NavigationRailLabelType.ALL,
             on_change=self.top_nav_change,
             destinations=self.top_nav_items,
-            # bgcolor=ft.Colors.GREEN_400,
+            bgcolor=ft.Colors.GREY_400,
             extended=True,
             height=110,
         )
@@ -39,9 +39,10 @@ class Sidebar(ft.Container):
             on_change=self.bottom_nav_change,
             extended=True,
             expand=True,
-            # bgcolor=ft.Colors.GREEN_400,
+            bgcolor=ft.Colors.GREY_400,
         )
         self.toggle_nav_rail_button = ft.IconButton(ft.Icons.ARROW_BACK)
+       
 
         super().__init__(
             content=ft.Column(

@@ -61,13 +61,20 @@ class TrelloApp(AppLayout):
         if self.page.theme_mode == ft.ThemeMode.LIGHT:
             self.page.theme_mode = ft.ThemeMode.DARK
             self.dark_mode_toggle.text = "Disable Dark Mode"
-            self.appbar.bgcolor = ft.Colors.BLACK45  # Darker orange for dark mode
-            self.sidebar.bgcolor = ft.Colors.BLACK45  # Darker indigo for dark mode
+            self.appbar.bgcolor = ft.Colors.BLACK
+            self.sidebar.top_nav_rail.bgcolor = ft.Colors.BLACK
+            self.sidebar.bottom_nav_rail.bgcolor = ft.Colors.BLACK
+            self.sidebar.bgcolor = ft.Colors.BLACK
+            self.bgcolor = ft.Colors.BLACK
+            # Change color of text Your Board
+            
         else:
             self.page.theme_mode = ft.ThemeMode.LIGHT
             self.dark_mode_toggle.text = "Enable Dark Mode"
-            self.appbar.bgcolor = ft.Colors.GREY_400  # Light orange for light mode
-            self.sidebar.bgcolor = ft.Colors.GREY_400  # Light indigo for light mode
+            self.appbar.bgcolor = ft.Colors.GREY_400
+            self.sidebar.bgcolor = ft.Colors.GREY_400
+            self.sidebar.top_nav_rail.bgcolor = ft.Colors.GREY_400
+            self.sidebar.bottom_nav_rail.bgcolor = ft.Colors.GREY_400
         self.page.update()
 
     def initialize(self):
@@ -76,7 +83,6 @@ class TrelloApp(AppLayout):
                 "/",
                 [self.appbar, self],
                 padding=ft.padding.all(0),
-                bgcolor=ft.Colors.WHITE,
             )
         )
         self.page.update()
@@ -156,7 +162,7 @@ class TrelloApp(AppLayout):
             label="New Board Name", on_submit=close_dlg, on_change=textfield_change
         )
         create_button = ft.ElevatedButton(
-            text="Create", bgcolor=ft.Colors.BLUE_200, on_click=close_dlg, disabled=True
+            text="Create", on_click=close_dlg, disabled=True
         )
         dialog = ft.AlertDialog(
             title=ft.Text("Name your new board"),

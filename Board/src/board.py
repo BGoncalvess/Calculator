@@ -109,7 +109,13 @@ class Board(ft.Container):
             print("Updating table with lists and their items' labels:")
             seen_labels = set()
             for bl in lists_to_show:
-                print(f"List ID {bl.board_list_id}: {bl.title}")
+                # Safely extract the column name
+                if bl.column and isinstance(bl.column.controls[0].content, ft.Text):
+                    column_name = bl.column.controls[0].content.value
+                else:
+                    column_name = bl.column.controls[0].content.controls[0].value
+                
+                print(f"List ID {bl.board_list_id}: {bl.title} (Column: {column_name})")
                 label_color_map = {}
                 for item in self.store.get_items(bl.board_list_id):
                     for label in item.labels:
@@ -121,9 +127,10 @@ class Board(ft.Container):
                         seen_labels.add(list_label_key)
                         table.rows.append(
                             ft.DataRow(cells=[
+                                ft.DataCell(ft.Text(column_name)),
                                 ft.DataCell(ft.Text(bl.title)),
                                 ft.DataCell(ft.Text(label)),
-                                ft.DataCell(ft.Text(str(color))),  # str() for readability
+                                ft.DataCell(ft.Text(str(color))),
                             ])
                         )
             # Only call update() if the table is already on the page
@@ -146,6 +153,7 @@ class Board(ft.Container):
         search_field = ft.TextField(label="Search Lists or Labels", on_change=search_labels)
         table = ft.DataTable(
             columns=[
+                ft.DataColumn(ft.Text("Column")),
                 ft.DataColumn(ft.Text("List")),
                 ft.DataColumn(ft.Text("Label")),
                 ft.DataColumn(ft.Text("Color")),
@@ -217,7 +225,7 @@ class Board(ft.Container):
 
                 # Case 1: A specific column is selected
                 if column_selector.value is not None:
-                    column_index = int(column_selector.value)
+                    column_index = int(column_selector.value) - 1
                     if column_index < len(self.board_lists.controls):
                         column = self.board_lists.controls[column_index]
                         if isinstance(column, ft.Column) and len(column.controls) > 1:
@@ -272,7 +280,6 @@ class Board(ft.Container):
                     self.store.add_list(self.board_id, new_list)
                     self.page.update()
             
-            # Close the dialog
             self.page.close(dialog)
 
         def textfield_change(e):
@@ -283,18 +290,19 @@ class Board(ft.Container):
             self.page.update()
 
         column_options = [
-            ft.dropdown.Option(str(i)) for i, control in enumerate(self.board_lists.controls) if isinstance(control, ft.Column)
+            ft.dropdown.Option(str(i + 1)) for i, control in enumerate(self.board_lists.controls) if isinstance(control, ft.Column)
         ]
         column_selector = ft.Dropdown(
             options=column_options,
-            label="Select Column (optional)",
+            label="Select Column",
+            width=229,
         )
 
         dialog_text = ft.TextField(
             label="New List Name", on_submit=close_dlg, on_change=textfield_change
         )
         create_button = ft.ElevatedButton(
-            text="Create", bgcolor=ft.Colors.BLUE_200, on_click=close_dlg, disabled=True
+            text="Create", on_click=close_dlg, disabled=True
         )
         dialog = ft.AlertDialog(
             title=ft.Text("Name your new list"),
@@ -373,7 +381,7 @@ class Board(ft.Container):
             label="New Column Name", on_submit=close_dlg, on_change=textfield_change
         )
         create_button = ft.ElevatedButton(
-            text="Create", bgcolor=ft.Colors.BLUE_200, on_click=close_dlg, disabled=True
+            text="Create", on_click=close_dlg, disabled=True
         )
         dialog = ft.AlertDialog(
             title=ft.Text("Name your new column"),
@@ -484,7 +492,7 @@ class Board(ft.Container):
                 label="Edit Column Name", value=column.controls[0].content.controls[0].value, on_submit=close_dlg, on_change=textfield_change
             )
             create_button = ft.ElevatedButton(
-                text="Save", bgcolor=ft.Colors.BLUE_200, on_click=close_dlg, disabled=True
+                text="Save", on_click=close_dlg, disabled=True
             )
             dialog = ft.AlertDialog(
                 title=ft.Text("Edit your column"),

@@ -28,7 +28,6 @@ class AppLayout(ft.Row):
                             ft.Text(
                                 value="Your Boards",
                                 theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM,
-                                color=ft.Colors.BLACK87
                             ),
                             expand=True,
                             padding=ft.padding.only(top=15),
@@ -39,7 +38,6 @@ class AppLayout(ft.Row):
                                 icon=ft.Icons.ADD,
                                 on_click=self.app.add_board,
                                 style=ft.ButtonStyle(
-                                    color=ft.Colors.BLACK87,
                                     shape={
                                         ft.ControlState.DEFAULT: ft.RoundedRectangleBorder(
                                             radius=3
