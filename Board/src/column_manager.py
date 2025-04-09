@@ -1,15 +1,26 @@
 import flet as ft
 
 class ColumnManager(ft.Container):
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, board: "Board"):
         super().__init__()
         self.page = page  # Store page reference to access width/height
+        self.board = board  # Store the Board reference
         self.columns = []
         
     def add_column(self, column_name, color):
-        if not column_name:
-            raise ValueError("Column name cannot be empty")
+        # Container for lists (starts empty with a placeholder)
+        lists_container = ft.Column(
+            controls=[ft.Container(height=100, width=250, bgcolor=ft.Colors.TRANSPARENT)],  # Placeholder
+            expand=True,  # Takes up available space
+            scroll=ft.ScrollMode.AUTO,  # Optional: allows scrolling if lists overflow
+        )
 
+        lists_container = ft.Column(
+            controls=[],
+            expand=True,
+            scroll=ft.ScrollMode.AUTO,
+        )
+       
         new_column = ft.Column(
             controls=[
                 ft.Container(
@@ -23,14 +34,15 @@ class ColumnManager(ft.Container):
                     bgcolor=color,
                     padding=ft.padding.all(5),
                 ),
-                ft.Column(
-                    controls=[], 
-                    expand=True, 
-                    scroll=ft.ScrollMode.AUTO,  # Enable scrolling
-                )  # Container for lists
+                ft.DragTarget(
+                    group="lists",
+                    content=lists_container,
+                    on_accept=lambda e: self.board.accept_list_to_column(e, new_column),
+                    on_will_accept=lambda e: self.highlight_column(new_column, True),
+                    on_leave=lambda e: self.highlight_column(new_column, False),
+                ),
             ],
         )
-        
         self.columns.append(new_column)
         return new_column
         
@@ -60,3 +72,11 @@ class ColumnManager(ft.Container):
         
     def get_columns(self):
         return self.columns
+    
+    def highlight_column(self, column, highlight):
+        container = column.controls[1].content  # The lists_container
+        if highlight:
+            container.border = ft.border.all(2, ft.Colors.BLUE)
+        else:
+            container.border = None
+        container.update()

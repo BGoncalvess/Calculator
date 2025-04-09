@@ -127,18 +127,11 @@ class BoardList(ft.Container):
             group="items",
             content=ft.Draggable(
                 group="lists",
-                content=ft.DragTarget(
-                    group="lists",
-                    content=self.inner_list,
-                    data=self,
-                    on_accept=self.accept_list,  # Handle list drops
-                    on_will_accept=self.item_will_drag_accept,
-                    on_leave=self.drag_leave,
-                ),
+                content=self.inner_list,
                 data=self,
             ),
             data=self,
-            on_accept=self.accept_item,  # Handle item drops
+            on_accept=self.accept_item,
             on_will_accept=self.item_will_drag_accept,
             on_leave=self.drag_leave,
         )
@@ -345,17 +338,4 @@ class BoardList(ft.Container):
         src_item.list = self
 
         # Update UI
-        self.page.update()
-
-    def accept_list(self, e):
-        src = self.page.get_control(e.src_id)
-        if src is None:
-            print("src is None - Control not found on page")
-            return
-        src_list = src.data
-        if not isinstance(src_list, BoardList):
-            print(f"Expected BoardList, got {type(src_list).__name__}")
-            return
-        print(f"List {src_list.board_list_id} dropped onto list {self.board_list_id}")
-        # Implement list reordering logic here if desired
         self.page.update()

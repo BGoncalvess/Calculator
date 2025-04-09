@@ -42,8 +42,7 @@ class Board(ft.Container):
             height=50,
         )
 
-        self.column_manager = ColumnManager(self.page)  # Pass page to ColumnManager
-        
+        self.column_manager = ColumnManager(self.page, self)  # Pass self to ColumnManager
         self.board_lists = ft.Row(
             controls=self.column_manager.get_columns(),
             vertical_alignment=ft.CrossAxisAlignment.START,
@@ -52,6 +51,18 @@ class Board(ft.Container):
             width=(self.app.page.width - 310),
             height=(self.app.page.height - 145),
         )
+
+        columns = self.column_manager.get_columns()
+
+        for col in columns:
+            drag_target = ft.DragTarget(
+                group="lists",
+                content=col.lists_container,
+                on_accept=lambda e, c=col: self.accept_list_to_column(e, c),
+                on_will_accept=lambda e, c=col: self.highlight_column(c, True),
+                on_leave=lambda e, c=col: self.highlight_column(c, False),
+            )
+            col.controls[1] = drag_target  # Replace the container with the DragTarget
 
         for l in self.store.get_lists_by_board(self.board_id):
             if l.page is None:
@@ -197,33 +208,71 @@ class Board(ft.Container):
             color_options.controls.append(v)
 
         def close_dlg(e):
+            # Check if the dialog should proceed (e.g., not canceled and text provided)
             if (hasattr(e.control, "text") and not e.control.text == "Cancel") or (
                 type(e.control) is ft.TextField and e.control.value != ""
             ):
+                # Create a new list object
                 new_list = BoardList(self, self.store, dialog_text.value, self.page, color=color_options.data)
-                print(f"Created new_list ID: {new_list.board_list_id} for board ID: {self.board_id}, page: {new_list.page}")
+
+                # Case 1: A specific column is selected
                 if column_selector.value is not None:
                     column_index = int(column_selector.value)
                     if column_index < len(self.board_lists.controls):
                         column = self.board_lists.controls[column_index]
-                        if isinstance(column, ft.Column):
-                            column.controls[1].controls.append(new_list.view)
-                            new_list.column = column
-                            self.store.add_list(self.board_id, new_list)
-                            self.page.update()
+                        if isinstance(column, ft.Column) and len(column.controls) > 1:
+                            drag_target = column.controls[1]
+                            if isinstance(drag_target, ft.DragTarget):
+                                # Append to the DragTarget's content controls
+                                drag_target.content.controls.append(new_list.view)
+                                new_list.column = column
+                                self.store.add_list(self.board_id, new_list)
+                                self.page.update()
+                            else:
+                                raise ValueError("Expected a DragTarget at column.controls[1]")
                         else:
-                            raise ValueError(f"Column at index {column_index} is not a Column")
+                            raise ValueError(f"Column at index {column_index} is not a valid Column")
                     else:
                         raise ValueError(f"Invalid column index: {column_index}")
+                
+                # Case 2: No column selected, use default (first) column or create one
                 else:
-                    if self.board_lists.controls and isinstance(self.board_lists.controls[0], ft.Column):
-                        self.board_lists.controls[0].controls[1].controls.append(new_list.view)
-                        new_list.column = self.board_lists.controls[0]
+                    if self.board_lists.controls:
+                        first_column = self.board_lists.controls[0]
+                        if (isinstance(first_column, ft.Column) and 
+                            len(first_column.controls) > 1 and 
+                            isinstance(first_column.controls[1], ft.DragTarget)):
+                            # Append to the DragTarget's content controls
+                            first_column.controls[1].content.controls.append(new_list.view)
+                            new_list.column = first_column
+                        else:
+                            raise ValueError("Unexpected structure in first column")
                     else:
-                        self.board_lists.controls.append(new_list.view)
+                        # Create a default column if none exist
+                        delete_button = ft.FloatingActionButton(
+                            icon=ft.Icons.DELETE, text="Remove Column", height=30, on_click=self.delete_column, data=len(self.board_lists.controls)
+                        )
+                        edit_button = ft.FloatingActionButton(
+                            icon=ft.Icons.EDIT, text="Edit Column", height=30, on_click=self.edit_column, data=len(self.board_lists.controls),
+                        )
+                        default_column = ft.Column(
+                            controls=[
+                                ft.Container(content=ft.Text("Default Column", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK, text_align=ft.TextAlign.CENTER), bgcolor=color_options.data, padding=ft.padding.all(5)),
+                                ft.DragTarget(
+                                    group="lists",
+                                    content=ft.Column(controls=[])
+                                ),
+                                delete_button,
+                                edit_button
+                            ]
+                        )
+                        self.board_lists.controls.append(default_column)
+                        default_column.controls[1].content.controls.append(new_list.view)
+                        new_list.column = default_column
                     self.store.add_list(self.board_id, new_list)
                     self.page.update()
-                print(f"After adding, new_list page: {new_list.page}")
+            
+            # Close the dialog
             self.page.close(dialog)
 
         def textfield_change(e):
@@ -357,8 +406,8 @@ class Board(ft.Container):
         # Remove from UI
         if self.board_lists.controls and isinstance(self.board_lists.controls[0], ft.Column):
             for column in self.board_lists.controls:
-                if isinstance(column, ft.Column) and list.view in column.controls[1].controls:
-                    column.controls[1].controls.remove(list.view)
+                if isinstance(column, ft.Column) and list.view in column.controls[1].content.controls:
+                    column.controls[1].content.controls.remove(list.view)
                     removed = True
                     break
         if not removed and list.view in self.board_lists.controls:
@@ -466,7 +515,7 @@ class Board(ft.Container):
             column = self.board_lists.controls[column_index]
             # Remove all lists in this column from the store
             if isinstance(column, ft.Column):
-                for control in column.controls[1].controls:
+                for control in column.controls[1].content.controls:
                     if isinstance(control, ft.DragTarget) and hasattr(control, 'data'):
                         list_obj = control.data
                         print(f"Removing list ID {list_obj.board_list_id} from store due to column deletion")
@@ -475,3 +524,31 @@ class Board(ft.Container):
                             del self.store.items[list_obj.board_list_id]
             del self.board_lists.controls[column_index]
             self.page.update()
+
+    def accept_list_to_column(self, e, target_column):
+        src = self.page.get_control(e.src_id)
+        if src is None:
+            print("src is None - Control not found on page")
+            return
+        src_list = src.data
+        if not isinstance(src_list, BoardList):  # Adjust BoardList to your actual list class
+            print(f"Expected BoardList, got {type(src_list).__name__}")
+            return
+        # Remove from current column
+        if src_list.column:
+            src_list.column.controls[1].content.controls.remove(src_list.view)
+            src_list.column.controls[1].update()
+        # Add to target column
+        target_column.controls[1].content.controls.append(src_list.view)
+        src_list.column = target_column
+        target_column.controls[1].update()
+        self.page.update()
+        print(f"Moved list {src_list.board_list_id} to column {target_column.controls[0].content.controls[0].value}")
+
+    def highlight_column(self, column, highlight):
+        container = column.controls[1].content
+        if highlight:
+            container.border = ft.border.all(2, ft.Colors.BLUE)
+        else:
+            container.border = None
+        container.update()
