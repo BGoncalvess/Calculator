@@ -217,3 +217,4 @@ print("flet version: ", ft.version.version)
 print("flet path: ", ft.__file__)
 ft.app(target=main, assets_dir="../assets")
 
+# ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8080, assets_dir="../assets")
