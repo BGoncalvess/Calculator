@@ -1,6 +1,8 @@
-from formats.LogFormat import LogFormat
+from src.formats.LogFormat import LogFormat
+
 
 class InvalidExpressionException(Exception):
+
     def __init__(self, message, logger):
         super().__init__(message)
         self.message = message

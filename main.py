@@ -1,6 +1,6 @@
 import flet as ft
-from core import RouteManager
-from storage.HistoryStorage import HistoryStorage
+from src.core import RouteManager
+from src.storage.HistoryStorage import HistoryStorage
 
 
 def main(page: ft.Page):
@@ -14,9 +14,6 @@ def main(page: ft.Page):
     page.window.height = 500
 
 
-# ft.app(target=main,
-#        view=ft.AppView.WEB_BROWSER,
-#        assets_dir="assets",
-#        port=8080)
+ft.app(target=main, view=ft.AppView.WEB_BROWSER, assets_dir="./src/assets")
 
-ft.app(target=main)
+# ft.app(target=main)

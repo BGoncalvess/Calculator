@@ -1,5 +1,6 @@
 import flet as ft
-from formats.HistoryFormat import HistoryFormat
+from src.formats.HistoryFormat import HistoryFormat
+
 
 class HistoryStorage:
 
@@ -14,7 +15,8 @@ class HistoryStorage:
         saved_history = cls.page.client_storage.get(cls.STORAGE_KEY)
         if saved_history:
             cls.history = [HistoryFormat(**entry) for entry in saved_history]
-            cls.counter = max((entry.index for entry in cls.history), default=-1) + 1
+            cls.counter = max(
+                (entry.index for entry in cls.history), default=-1) + 1
         else:
             cls.history = []
             cls.counter = 1
